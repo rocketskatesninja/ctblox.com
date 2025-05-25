@@ -1,0 +1,35 @@
+# Ignore configuration files with sensitive information
+config/database.php
+
+# Ignore logs and cache directories
+logs/*
+!logs/.gitkeep
+cache/*
+!cache/.gitkeep
+
+# Ignore user uploaded content
+uploads/*
+!uploads/.gitkeep
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore vendor directories if using composer
+/vendor/
+
+# Ignore node modules if using npm
+/node_modules/
+
+# Ignore environment-specific files
+.env
+*.env
+
+# Ignore IDE specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore PHP error logs
+php_errors.log
