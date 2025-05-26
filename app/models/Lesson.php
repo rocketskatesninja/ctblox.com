@@ -208,8 +208,10 @@ class Lesson {
         }
     }
     
-    public function getUserProgress($userId) {
+    public function getUserProgress($userId, $limit = null) {
         try {
+            $this->pdo->beginTransaction();
+            
             // First get all assigned lessons and their chapters
             $allLessons = $this->pdo->prepare("
                 SELECT l.id, l.title, c.chapter_id
@@ -223,24 +225,66 @@ class Lesson {
             $assignedLessons = $allLessons->fetchAll();
             
             if (empty($assignedLessons)) {
+                $this->pdo->commit();
                 return [];
             }
             
+            // Count the total number of progress entries for this user
+            $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM progress WHERE user_id = ?");
+            $countStmt->execute([$userId]);
+            $totalEntries = $countStmt->fetchColumn();
+            
+            // If there's a limit and there are more than the limit, delete the oldest entries
+            if ($limit !== null && $totalEntries > $limit) {
+                $deleteCount = $totalEntries - $limit;
+                $deleteStmt = $this->pdo->prepare("
+                    DELETE FROM progress 
+                    WHERE id IN (
+                        SELECT id FROM progress 
+                        WHERE user_id = ? 
+                        ORDER BY completed_at ASC 
+                        LIMIT ?
+                    )
+                ");
+                $deleteStmt->execute([$userId, $deleteCount]);
+                error_log("Deleted {$deleteCount} old progress entries for user {$userId} to maintain limit of {$limit}");
+            }
+            
             // Then get the user's progress for these lessons
-            $stmt = $this->pdo->prepare("
-                SELECT l.id as lesson_id, l.title, p.chapter_id, p.completed, p.completed_at,
-                       qr.score as quiz_score
-                FROM progress p
-                JOIN lessons l ON p.lesson_id = l.id
-                LEFT JOIN quiz_results qr ON p.lesson_id = qr.lesson_id 
-                    AND p.chapter_id = qr.chapter_id 
-                    AND p.user_id = qr.user_id
-                WHERE p.user_id = ? AND l.id IN (
-                    SELECT DISTINCT lesson_id FROM lesson_assignments WHERE user_id = ?
-                )
-                ORDER BY l.id, p.chapter_id
-            ");
-            $stmt->execute([$userId, $userId]);
+            if ($limit === null) {
+                // Get all progress entries when no limit is specified (for coach dashboard)
+                $stmt = $this->pdo->prepare("
+                    SELECT l.id as lesson_id, l.title, p.chapter_id, p.completed, p.completed_at,
+                           qr.score as quiz_score
+                    FROM progress p
+                    JOIN lessons l ON p.lesson_id = l.id
+                    LEFT JOIN quiz_results qr ON p.lesson_id = qr.lesson_id 
+                        AND p.chapter_id = qr.chapter_id 
+                        AND p.user_id = qr.user_id
+                    WHERE p.user_id = ? AND l.id IN (
+                        SELECT DISTINCT lesson_id FROM lesson_assignments WHERE user_id = ?
+                    )
+                    ORDER BY p.completed_at DESC
+                ");
+                $stmt->execute([$userId, $userId]);
+            } else {
+                // Get limited progress entries (for student dashboard)
+                $stmt = $this->pdo->prepare("
+                    SELECT l.id as lesson_id, l.title, p.chapter_id, p.completed, p.completed_at,
+                           qr.score as quiz_score
+                    FROM progress p
+                    JOIN lessons l ON p.lesson_id = l.id
+                    LEFT JOIN quiz_results qr ON p.lesson_id = qr.lesson_id 
+                        AND p.chapter_id = qr.chapter_id 
+                        AND p.user_id = qr.user_id
+                    WHERE p.user_id = ? AND l.id IN (
+                        SELECT DISTINCT lesson_id FROM lesson_assignments WHERE user_id = ?
+                    )
+                    ORDER BY p.completed_at DESC
+                    LIMIT ?
+                ");
+                $stmt->execute([$userId, $userId, $limit]);
+            }
             $userProgress = $stmt->fetchAll();
             
             // Organize progress by lesson and chapter
@@ -252,25 +296,11 @@ class Lesson {
             
             // Create a complete progress report including chapters with no progress
             $completeProgress = [];
-            foreach ($assignedLessons as $lesson) {
-                $key = $lesson['id'] . '-' . $lesson['chapter_id'];
-                
-                if (isset($progressByChapter[$key])) {
-                    // Chapter has progress record
-                    $completeProgress[] = $progressByChapter[$key];
-                } else {
-                    // Chapter has no progress record, create a default one
-                    $completeProgress[] = [
-                        'lesson_id' => $lesson['id'],
-                        'title' => $lesson['title'],
-                        'chapter_id' => $lesson['chapter_id'],
-                        'completed' => 0,
-                        'completed_at' => null,
-                        'quiz_score' => null
-                    ];
-                }
+            foreach ($userProgress as $progress) {
+                $completeProgress[] = $progress;
             }
             
+            $this->pdo->commit();
             return $completeProgress;
         } catch (PDOException $e) {
             error_log("Error getting user progress: " . $e->getMessage());
@@ -365,6 +395,23 @@ class Lesson {
             // Start a transaction to ensure all operations succeed or fail together
             $this->pdo->beginTransaction();
             
+            // First, log the current progress statistics before deletion for activity logging
+            $progressStmt = $this->pdo->prepare("
+                SELECT COUNT(*) as completed_chapters
+                FROM progress
+                WHERE user_id = ? AND lesson_id = ? AND completed = 1
+            ");
+            $progressStmt->execute([$userId, $lessonId]);
+            $completedChapters = $progressStmt->fetchColumn();
+            
+            // Log the unassignment with progress info for auditing
+            $logStmt = $this->pdo->prepare("
+                INSERT INTO activity_log (username, activity_type, description, ip_address)
+                SELECT username, 'lesson_unassigned', CONCAT('Lesson ID ', ?, ' unassigned. ', ?, ' completed chapters removed.'), ?
+                FROM users WHERE id = ?
+            ");
+            $logStmt->execute([$lessonId, $completedChapters, $_SERVER['REMOTE_ADDR'] ?? 'unknown', $userId]);
+            
             // Delete the lesson assignment
             $stmt = $this->pdo->prepare("
                 DELETE FROM lesson_assignments
@@ -385,6 +432,25 @@ class Lesson {
                 WHERE user_id = ? AND lesson_id = ?
             ");
             $stmt->execute([$userId, $lessonId]);
+            
+            // Update user statistics cache if it exists
+            $cacheStmt = $this->pdo->prepare("
+                UPDATE user_statistics 
+                SET total_completed_chapters = (
+                    SELECT COUNT(*) FROM progress WHERE user_id = ? AND completed = 1
+                ),
+                total_completed_lessons = (
+                    SELECT COUNT(DISTINCT lesson_id) FROM (
+                        SELECT lesson_id, COUNT(*) as total_chapters, SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed_chapters
+                        FROM progress 
+                        WHERE user_id = ?
+                        GROUP BY lesson_id
+                        HAVING total_chapters = completed_chapters AND completed_chapters > 0
+                    ) as completed_lessons
+                )
+                WHERE user_id = ?
+            ");
+            $cacheStmt->execute([$userId, $userId, $userId]);
             
             // Commit the transaction
             $this->pdo->commit();
@@ -508,24 +574,28 @@ class Lesson {
      */
     public function getOverallProgress($userId) {
         try {
+            // Only count lessons and chapters that are currently assigned to the student
             $stmt = $this->pdo->prepare("
-                SELECT COUNT(DISTINCT c.id) as total_chapters,
-                       COUNT(DISTINCT CASE WHEN p.completed = 1 THEN c.id END) as completed_chapters,
-                       COUNT(DISTINCT l.id) as total_lessons,
-                       COUNT(DISTINCT CASE WHEN l.id IN (
-                           SELECT l2.id
-                           FROM lessons l2
-                           JOIN chapters c2 ON l2.id = c2.lesson_id
-                           LEFT JOIN progress p2 ON l2.id = p2.lesson_id AND c2.chapter_id = p2.chapter_id AND p2.user_id = ?
-                           GROUP BY l2.id
-                           HAVING COUNT(DISTINCT c2.chapter_id) = COUNT(DISTINCT CASE WHEN p2.completed = 1 THEN p2.chapter_id END)
-                           AND COUNT(DISTINCT c2.chapter_id) > 0
-                       ) THEN l.id END) as completed_lessons
+                SELECT 
+                    COUNT(DISTINCT c.id) as total_chapters,
+                    COUNT(DISTINCT CASE WHEN p.completed = 1 THEN c.id END) as completed_chapters,
+                    COUNT(DISTINCT l.id) as total_lessons,
+                    COUNT(DISTINCT CASE WHEN l.id IN (
+                        SELECT l2.id
+                        FROM lessons l2
+                        JOIN lesson_assignments la2 ON l2.id = la2.lesson_id AND la2.user_id = ?
+                        JOIN chapters c2 ON l2.id = c2.lesson_id
+                        LEFT JOIN progress p2 ON l2.id = p2.lesson_id AND c2.chapter_id = p2.chapter_id AND p2.user_id = ?
+                        GROUP BY l2.id
+                        HAVING COUNT(DISTINCT c2.chapter_id) = COUNT(DISTINCT CASE WHEN p2.completed = 1 THEN p2.chapter_id END)
+                        AND COUNT(DISTINCT c2.chapter_id) > 0
+                    ) THEN l.id END) as completed_lessons
                 FROM lessons l
+                JOIN lesson_assignments la ON l.id = la.lesson_id AND la.user_id = ?
                 JOIN chapters c ON l.id = c.lesson_id
                 LEFT JOIN progress p ON l.id = p.lesson_id AND c.chapter_id = p.chapter_id AND p.user_id = ?
             ");
-            $stmt->execute([$userId, $userId]);
+            $stmt->execute([$userId, $userId, $userId, $userId]);
             $result = $stmt->fetch();
             
             // Calculate percentages

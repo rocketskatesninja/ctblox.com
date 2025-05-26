@@ -32,6 +32,7 @@ $router->add('GET', '/lesson/{id}', 'LessonController', 'viewLesson');
 $router->add('POST', '/lesson/progress', 'LessonController', 'updateProgress');
 $router->add('POST', '/lesson/quiz', 'LessonController', 'saveQuizResult');
 $router->add('GET', '/lesson/quiz/{id}', 'LessonController', 'getQuiz');
+$router->add('POST', '/lesson/saveFeedback', 'LessonController', 'saveFeedback');
 $router->add('GET', '/lesson/{id}/certificate', 'LessonController', 'generateCertificate');
 
 // Admin routes

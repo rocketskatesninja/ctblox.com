@@ -1,7 +1,7 @@
 <?php $title = 'Dashboard'; ?>
 <?php require_once __DIR__ . '/../../includes/header.php'; ?>
 
-<div class="space-y-6">
+<div class="space-y-6 bg-gray-50">
     <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6">
             <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
@@ -10,6 +10,36 @@
             <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                 Continue your learning journey or start a new lesson.
             </p>
+        </div>
+        <div class="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-md p-2">
+                            <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">Chapters Completed</h4>
+                            <p class="mt-1 text-2xl font-semibold text-indigo-600 dark:text-indigo-400"><?= $stats['total_completed_chapters'] ?></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-green-100 dark:bg-green-900 rounded-md p-2">
+                            <svg class="h-6 w-6 text-green-600 dark:text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">Lessons Completed</h4>
+                            <p class="mt-1 text-2xl font-semibold text-green-600 dark:text-green-400"><?= $stats['total_completed_lessons'] ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -25,7 +25,7 @@ class CoachController extends Controller {
         // Get progress data for each student
         $studentsWithProgress = [];
         foreach ($students as $student) {
-            $progress = $this->lesson->getUserProgress($student['id']);
+            $progress = $this->lesson->getUserProgress($student['id'], null); // Pass null to get all progress entries
             
             // Group progress by lesson
             $lessonProgress = [];

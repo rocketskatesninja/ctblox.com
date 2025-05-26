@@ -19,7 +19,7 @@ class User {
                 
                 // Log the login activity with IP address
                 $ipAddress = $this->getClientIP();
-                $this->logActivity($user['username'], 'login', null, "User logged in from IP: {$ipAddress}", $ipAddress);
+                $this->logActivity($user['username'], 'login', null, "User logged in", $ipAddress);
                 
                 return $user; // Return the user data instead of true
             }

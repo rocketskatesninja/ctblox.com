@@ -69,10 +69,33 @@ ini_set('session.gc_maxlifetime', SESSION_LIFETIME);
 ini_set('session.gc_probability', 1);
 ini_set('session.gc_divisor', 100);
 
-// Set session cookie lifetime to match session lifetime
-session_set_cookie_params(SESSION_LIFETIME);
+// Configure session parameters before starting the session
+ini_set('session.gc_maxlifetime', SESSION_LIFETIME); // Server-side session timeout
+
+// Set session cookie parameters
+session_set_cookie_params([
+    'lifetime' => SESSION_LIFETIME,
+    'path' => '/',
+    'domain' => '',
+    'secure' => isset($_SERVER['HTTPS']),
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
 
 // Initialize the database session handler
 $sessionHandler = new DatabaseSessionHandler($pdo);
 session_set_save_handler($sessionHandler, true);
+
+// Start the session
 session_start();
+
+// Check if we need to refresh the session expiry time
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 60)) {
+    // Update last activity time stamp
+    $_SESSION['last_activity'] = time();
+}
+
+// Set last activity timestamp if not set
+if (!isset($_SESSION['last_activity'])) {
+    $_SESSION['last_activity'] = time();
+}

@@ -2,78 +2,219 @@
 require_once __DIR__ . '/config.php';
 ?>
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en">
 <head>
+    <!-- Anti-flash script - must be first in head -->
+    <script>
+        (function() {
+            // Function to apply theme based on preference
+            function applyTheme() {
+                // Check for dark mode preference
+                var savedDarkMode = localStorage.getItem('darkMode');
+                var prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var isDarkMode = savedDarkMode === 'enabled' || (savedDarkMode === null && prefersDarkMode);
+                
+                // Set class on html element immediately
+                if (isDarkMode) {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
+                    if (document.body) document.body.classList.add('dark-mode');
+                } else {
+                    document.documentElement.classList.add('light');
+                    document.documentElement.classList.remove('dark');
+                    if (document.body) document.body.classList.remove('dark-mode');
+                }
+            }
+            
+            // Apply theme immediately
+            applyTheme();
+            
+            // Block rendering until we've set up the right theme
+            document.documentElement.style.visibility = 'hidden';
+            window.addEventListener('DOMContentLoaded', function() {
+                applyTheme(); // Apply again after DOM is loaded
+                document.documentElement.style.visibility = '';
+            });
+            
+            // Handle page show events (back/forward navigation)
+            window.addEventListener('pageshow', function(event) {
+                // If the page is loaded from the bfcache
+                if (event.persisted) {
+                    applyTheme(); // Re-apply theme
+                }
+            });
+        })();
+    </script>
+    
+    <!-- Critical theme styles - must be as early as possible -->
+    <style>
+        /* Hide page until theme is applied */
+        html.visibility-hidden { visibility: hidden; }
+        
+        /* Dark mode critical styles */
+        html.dark { color-scheme: dark; }
+        html.dark body { background-color: #1a202c !important; color: #e2e8f0 !important; }
+        html.dark .bg-white, 
+        html.dark .card, 
+        html.dark nav, 
+        html.dark header, 
+        html.dark footer,
+        html.dark .bg-gray-50,
+        html.dark .bg-gray-100 { background-color: #2d3748 !important; }
+        html.dark .text-gray-900, 
+        html.dark .text-gray-800, 
+        html.dark .text-gray-700,
+        html.dark h1, html.dark h2, html.dark h3, 
+        html.dark h4, html.dark h5, html.dark h6 { color: #e2e8f0 !important; }
+        html.dark .border, 
+        html.dark .border-gray-200, 
+        html.dark .border-gray-300 { border-color: #4a5568 !important; }
+        
+        /* Light mode critical styles */
+        html.light { color-scheme: light; }
+        html.light body { background-color: #f9fafb !important; color: #1a202c !important; }
+        html.light .bg-gray-800, 
+        html.light .bg-gray-900, 
+        html.light .bg-slate-800, 
+        html.light .bg-slate-900 { background-color: #ffffff !important; }
+        
+        /* Fix hover states in light mode */
+        html.light .hover\:bg-gray-50:hover,
+        html.light .hover\:bg-gray-100:hover,
+        html.light .hover\:bg-gray-200:hover { background-color: #f3f4f6 !important; }
+        html.light .dark\:hover\:bg-gray-700:hover { background-color: #f3f4f6 !important; }
+    </style>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($title) ? $title . ' - ' . APP_NAME : APP_NAME ?></title>
     
-    <!-- Prevent flash of light mode -->
+    <!-- Theme switcher script - inline to avoid 404 errors -->
     <script>
-        // Immediately check for dark mode preference to prevent flash
-        (function() {
-            var savedDarkMode = localStorage.getItem('darkMode');
-            var prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    /**
+     * Enhanced Theme Switcher for CTBlox
+     * - Persists theme across page navigation
+     * - Handles back/forward navigation
+     * - Prevents flash of wrong theme
+     */
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the toggle button
+        const toggleButton = document.getElementById('toggle-dark-mode');
+        
+        // Function to enable dark mode
+        function enableDarkMode() {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('darkMode', 'enabled');
             
-            if (savedDarkMode === 'enabled' || (savedDarkMode === null && prefersDarkMode)) {
-                // Remove light class and add dark class to html element
-                document.documentElement.classList.remove('light');
-                document.documentElement.classList.add('dark');
+            // Update toggle button UI
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            if (darkModeToggle) darkModeToggle.checked = true;
+            
+            const darkModeLight = document.querySelector('.dark-mode-light');
+            const darkModeDark = document.querySelector('.dark-mode-dark');
+            if (darkModeLight) darkModeLight.classList.add('hidden');
+            if (darkModeDark) darkModeDark.classList.remove('hidden');
+            
+            // Set a session cookie to ensure theme persists across pages
+            document.cookie = "theme=dark; path=/; SameSite=Strict";
+        }
+        
+        // Function to enable light mode
+        function enableLightMode() {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('darkMode', 'disabled');
+            
+            // Update toggle button UI
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            if (darkModeToggle) darkModeToggle.checked = false;
+            
+            const darkModeLight = document.querySelector('.dark-mode-light');
+            const darkModeDark = document.querySelector('.dark-mode-dark');
+            if (darkModeLight) darkModeLight.classList.remove('hidden');
+            if (darkModeDark) darkModeDark.classList.add('hidden');
+            
+            // Force light mode styles on elements that might be stuck
+            document.querySelectorAll('.bg-gray-800, .bg-gray-900, .bg-slate-800, .bg-slate-900, .dark\\:bg-gray-800').forEach(el => {
+                el.style.backgroundColor = '#ffffff';
+            });
+            
+            document.querySelectorAll('.bg-gray-700, .dark\\:bg-gray-700').forEach(el => {
+                el.style.backgroundColor = '#f7fafc';
+            });
+            
+            document.querySelectorAll('.text-white, .text-gray-100, .text-gray-200, .dark\\:text-white, .dark\\:text-gray-100, .dark\\:text-gray-200').forEach(el => {
+                el.style.color = '#1a202c';
+            });
+            
+            // Fix footer specifically
+            document.querySelectorAll('footer').forEach(el => {
+                el.style.backgroundColor = '#ffffff';
+                el.style.borderColor = '#e2e8f0';
+            });
+            
+            // Fix lesson box hover states
+            document.querySelectorAll('a.block.hover\\:bg-gray-50.dark\\:hover\\:bg-gray-700').forEach(el => {
+                // Remove the dark hover class and add a light hover class
+                el.classList.remove('dark:hover:bg-gray-700');
+                el.classList.add('hover:bg-gray-50');
                 
-                // Add dark-mode class to body as soon as it exists
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.body.classList.add('dark-mode');
+                // Add a mouseover event listener to ensure proper hover color
+                el.addEventListener('mouseover', function() {
+                    this.style.backgroundColor = '#f9fafb';
                 });
                 
-                // Apply critical dark mode styles immediately to prevent flash
-                document.write('<style>' + 
-                    'html.dark { color-scheme: dark; }' +
-                    'html.dark body { background-color: #1a202c !important; color: #e2e8f0 !important; }' +
-                    'html.dark .bg-white, html.dark nav, html.dark footer, html.dark .card, ' +
-                    'html.dark .shadow, html.dark .bg-gray-50, html.dark .bg-gray-100, ' +
-                    'html.dark [class*="bg-white"], html.dark header, html.dark aside, ' +
-                    'html.dark .dropdown-menu, html.dark .modal-content { background-color: #2d3748 !important; }' +
-                    'html.dark .text-gray-900, html.dark .text-gray-800, html.dark .text-gray-700, ' +
-                    'html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6 { color: #e2e8f0 !important; }' +
-                    'html.dark .border, html.dark .border-gray-200, html.dark .border-gray-300, ' +
-                    'html.dark .border-t, html.dark .border-b, html.dark .border-l, html.dark .border-r { border-color: #4a5568 !important; }' +
-                    'html.dark table th { background-color: #2d3748 !important; color: #e2e8f0 !important; }' +
-                    'html.dark table td { border-color: #4a5568 !important; }' +
-                    
-                    /* Progress bar dark mode styles */
-                    'html.dark .bg-gray-200 { background-color: #4a5568 !important; }' +
-                    'html.dark .bg-green-500 { background-color: #48bb78 !important; }' +
-                    'html.dark .bg-yellow-500 { background-color: #ecc94b !important; }' +
-                    'html.dark .bg-red-500 { background-color: #f56565 !important; }' +
-                    
-                    /* Button and badge dark mode styles */
-                    'html.dark .bg-red-50 { background-color: rgba(245, 101, 101, 0.2) !important; }' +
-                    'html.dark .text-red-700 { color: #fc8181 !important; }' +
-                    'html.dark .bg-red-100 { background-color: rgba(245, 101, 101, 0.3) !important; }' +
-                    'html.dark .text-red-800 { color: #feb2b2 !important; }' +
-                    
-                    'html.dark .bg-green-50 { background-color: rgba(72, 187, 120, 0.2) !important; }' +
-                    'html.dark .bg-green-100 { background-color: rgba(72, 187, 120, 0.3) !important; }' +
-                    'html.dark .text-green-500 { color: #68d391 !important; }' +
-                    'html.dark .text-green-800 { color: #9ae6b4 !important; }' +
-                    
-                    'html.dark .bg-blue-100 { background-color: rgba(66, 153, 225, 0.3) !important; }' +
-                    'html.dark .text-blue-500 { color: #63b3ed !important; }' +
-                    'html.dark .text-blue-800 { color: #90cdf4 !important; }' +
-                    
-                    'html.dark .bg-yellow-100 { background-color: rgba(236, 201, 75, 0.3) !important; }' +
-                    'html.dark .text-yellow-500 { color: #f6e05e !important; }' +
-                    'html.dark .text-yellow-800 { color: #faf089 !important; }' +
-                    
-                    'html.dark .bg-indigo-100 { background-color: rgba(102, 126, 234, 0.3) !important; }' +
-                    'html.dark .text-indigo-500 { color: #7f9cf5 !important; }' +
-                    'html.dark .text-indigo-800 { color: #a3bffa !important; }' +
-                    'html.dark input, html.dark select, html.dark textarea { background-color: #2d3748 !important; color: #e2e8f0 !important; border-color: #4a5568 !important; }' +
-                    'html.dark .bg-indigo-50, html.dark .bg-purple-50, html.dark .bg-blue-50, ' +
-                    'html.dark .bg-green-50, html.dark .bg-emerald-50, html.dark .bg-orange-50 { background-color: #2d3748 !important; }' +
-                '</style>');
+                // Add a mouseout event listener to reset the background color
+                el.addEventListener('mouseout', function() {
+                    this.style.backgroundColor = '';
+                });
+            });
+            
+            // Set a session cookie to ensure theme persists across pages
+            document.cookie = "theme=light; path=/; SameSite=Strict";
+        }
+        
+        // Check for saved preference or use system preference
+        const savedDarkMode = localStorage.getItem('darkMode');
+        const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        // Set initial theme
+        if (savedDarkMode === 'enabled' || (savedDarkMode === null && prefersDarkMode)) {
+            enableDarkMode();
+        } else {
+            enableLightMode();
+        }
+        
+        // Add click handler to toggle button
+        if (toggleButton) {
+            toggleButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                if (document.documentElement.classList.contains('dark')) {
+                    enableLightMode();
+                } else {
+                    enableDarkMode();
+                }
+            });
+        }
+        
+        // Handle page show events (back/forward navigation)
+        window.addEventListener('pageshow', function(event) {
+            // If the page is loaded from the bfcache
+            if (event.persisted) {
+                // Re-apply theme based on localStorage
+                const savedDarkMode = localStorage.getItem('darkMode');
+                if (savedDarkMode === 'enabled') {
+                    enableDarkMode();
+                } else if (savedDarkMode === 'disabled') {
+                    enableLightMode();
+                }
             }
-        })();
+        });
+    });
     </script>
     
     <!-- Tailwind CSS - Using CDN for development, would use compiled CSS in production -->
@@ -535,68 +676,14 @@ require_once __DIR__ . '/config.php';
                     e.stopPropagation();
                     
                     const html = document.documentElement;
-                    if (html.classList.contains('dark')) {
-                        disableDarkMode();
-                    } else {
-                        enableDarkMode();
-                    }
+                    const newTheme = html.classList.contains('dark') ? 'light' : 'dark';
+                    applyTheme(newTheme);
                 });
             }
-            
-            // Check for saved dark mode preference or use system preference
-            const savedDarkMode = localStorage.getItem('darkMode');
-            const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            // Initialize dark mode based on saved preference or system preference
-            if (savedDarkMode === 'enabled' || (savedDarkMode === null && prefersDarkMode)) {
-                enableDarkMode();
-            } else {
-                disableDarkMode();
-            }
         });
-        
-        // Function to enable dark mode
-        function enableDarkMode() {
-            const html = document.documentElement;
-            const darkModeToggle = document.getElementById('dark-mode-toggle');
-            const darkModeLight = document.querySelector('.dark-mode-light');
-            const darkModeDark = document.querySelector('.dark-mode-dark');
-            
-            html.classList.add('dark');
-            if (darkModeToggle) darkModeToggle.checked = true;
-            if (darkModeLight) darkModeLight.classList.add('hidden');
-            if (darkModeDark) darkModeDark.classList.remove('hidden');
-            localStorage.setItem('darkMode', 'enabled');
-            
-            // Add dark mode class to body
-            document.body.classList.add('dark-mode');
-            
-            // No need to manually change classes as we're using CSS overrides
-            // This approach is simpler and more reliable
-        }
-        
-        // Function to disable dark mode
-        function disableDarkMode() {
-            const html = document.documentElement;
-            const darkModeToggle = document.getElementById('dark-mode-toggle');
-            const darkModeLight = document.querySelector('.dark-mode-light');
-            const darkModeDark = document.querySelector('.dark-mode-dark');
-            
-            html.classList.remove('dark');
-            if (darkModeToggle) darkModeToggle.checked = false;
-            if (darkModeLight) darkModeLight.classList.remove('hidden');
-            if (darkModeDark) darkModeDark.classList.add('hidden');
-            localStorage.setItem('darkMode', 'disabled');
-            
-            // Remove dark mode class from body
-            document.body.classList.remove('dark-mode');
-            
-            // No need to manually change classes as we're using CSS overrides
-            // This approach is simpler and more reliable
-        }
     </script>
 </head>
-<body class="bg-gray-100 dark:bg-slate-900 flex flex-col min-h-screen">
+<body class="bg-gray-50 dark:bg-slate-900 flex flex-col min-h-screen">
     <nav class="bg-white shadow">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">

@@ -42,11 +42,21 @@ class LessonController extends Controller {
             $quizResults[$item['chapter_id']] = $item['score'];
         }
         
+        // Check if all chapters are completed
+        $allChaptersCompleted = true;
+        foreach ($lesson['chapters'] as $chapter) {
+            if (!isset($progress[$chapter['id']]) || !$progress[$chapter['id']]) {
+                $allChaptersCompleted = false;
+                break;
+            }
+        }
+        
         return $this->view('lessons/view', [
             'lesson' => $lesson,
             'progress' => $progress,
             'quizResults' => $quizResults,
-            'csrf_token' => $this->generateCsrfToken()
+            'csrf_token' => $this->generateCsrfToken(),
+            'allChaptersCompleted' => $allChaptersCompleted
         ]);
     }
     
@@ -89,57 +99,132 @@ class LessonController extends Controller {
         // Make sure we're sending JSON response headers
         header('Content-Type: application/json');
         
-        if (!$this->isAjax()) {
-            echo json_encode(['error' => 'Only AJAX requests are allowed']);
-            exit;
-        }
-        
         try {
+            // Validate request
+            if (!$this->isAjax()) {
+                throw new Exception('Only AJAX requests are allowed');
+            }
+            
             $this->checkCsrfToken();
             
+            // Get and validate required parameters
             $lessonId = $_POST['lesson_id'] ?? null;
             $chapterId = $_POST['chapter_id'] ?? null;
             
             if (!$lessonId || !$chapterId) {
-                echo json_encode(['error' => 'Invalid parameters']);
-                exit;
+                throw new Exception('Missing required parameters: lesson_id and chapter_id');
+            }
+            
+            // Validate user is logged in
+            if (!isset($_SESSION['user_id'])) {
+                throw new Exception('User not authenticated');
             }
             
             // Calculate score based on submitted answers
-            // For the default quiz, we'll use a simple scoring system
-            // In a real implementation, you would load correct answers from a database
             $score = $this->calculateQuizScore($_POST);
-            $passed = $score >= 80;
+            $passed = $score >= 80; // 80% is passing score
             
-            if ($this->lesson->saveQuizResult($_SESSION['user_id'], $lessonId, $chapterId, $score)) {
-                // If the student passed the quiz, automatically mark the chapter as complete
-                if ($passed) {
-                    $this->lesson->updateProgress($_SESSION['user_id'], $lessonId, $chapterId, true);
-                }
-                
-                echo json_encode([
-                    'success' => true,
-                    'score' => $score,
-                    'passed' => $passed,
-                    'autoCompleted' => $passed
-                ]);
-            } else {
-                echo json_encode(['error' => 'Error saving quiz result']);
+            // Save quiz result
+            if (!$this->lesson->saveQuizResult($_SESSION['user_id'], $lessonId, $chapterId, $score)) {
+                throw new Exception('Failed to save quiz result');
             }
+            
+            // If student passed, mark chapter as complete
+            if ($passed) {
+                if (!$this->lesson->updateProgress($_SESSION['user_id'], $lessonId, $chapterId, true)) {
+                    error_log("Warning: Failed to update progress after passing quiz. User: {$_SESSION['user_id']}, Lesson: {$lessonId}, Chapter: {$chapterId}");
+                }
+            }
+            
+            // Return success response
+            echo json_encode([
+                'success' => true,
+                'score' => $score,
+                'passed' => $passed,
+                'autoCompleted' => $passed
+            ]);
+            
         } catch (Exception $e) {
             error_log('Error in saveQuizResult: ' . $e->getMessage());
-            echo json_encode(['error' => 'An unexpected error occurred']);
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
         }
         exit;
     }
     
     private function calculateQuizScore($answers) {
-        // For our default quiz, define the correct answers
-        // In a real implementation, you would load correct answers from a database
-        $correctAnswers = [
-            'q1' => 'c',  // Both theoretical knowledge and practical skills
-            'q2' => 'b'   // By practicing with real-world examples
+        // Get the chapter ID to determine which quiz we're scoring
+        $chapterId = $answers['chapter_id'] ?? '';
+        
+        // Define correct answers for each quiz
+        $quizAnswers = [
+            'chapter_structure' => [
+                'q1' => 'c',  // Both theoretical knowledge and practical skills
+                'q2' => 'b',  // By practicing with real-world examples
+                'q3' => 'c'   // Clear organization and flow
+            ],
+            'content_formatting' => [
+                'q1' => 'b',  // Unordered lists (list-disc)
+                'q2' => 'b',  // 3-5 sentences
+                'q3' => 'c'   // When comparing multiple items across consistent categories
+            ],
+            'company_overview' => [
+                'q1' => 'b',  // 2010
+                'q2' => 'c',  // To empower entrepreneurs by simplifying business formation and compliance
+                'q3' => 'd',  // Competitiveness
+                'q4' => 'a',  // Celebrated 10 years of service and 40,000+ businesses formed
+                'q5' => 'c'   // Technology-driven approach with proprietary platforms
+            ],
+            'service_offerings' => [
+                'q1' => 'd',  // Tax return preparation
+                'q2' => 'b',  // To receive important legal and government documents on behalf of businesses
+                'q3' => 'c',  // Avoiding penalties and maintaining good standing
+                'q4' => 'd',  // Enterprise
+                'q5' => 'd'   // Inventory Management
+            ],
+            'customer_experience' => [
+                'q1' => 'c',  // Combining expertise with empathy
+                'q2' => 'b',  // Connect
+                'q3' => 'b',  // 4 business hours
+                'q4' => 'c',  // Customer Effort Score (CES)
+                'q5' => 'c'   // Offer to transition to phone or email for better assistance
+            ],
+            'team_structure' => [
+                'q1' => 'b',  // Operations
+                'q2' => 'c',  // Ensuring services adhere to all applicable regulations
+                'q3' => 'c',  // Monthly
+                'q4' => 'c',  // Guaranteed promotions every year
+                'q5' => 'c'   // Forming a rapid response team with a clear issue owner and supporting experts
+            ],
+            'technology_tools' => [
+                'q1' => 'b',  // Client Portal
+                'q2' => 'a',  // Compliance Management System (CMS)
+                'q3' => 'c',  // Multi-factor authentication and 256-bit encryption
+                'q4' => 'b',  // Receipt of physical or electronic document
+                'q5' => 'c'   // Analytics Dashboard
+            ],
+            'compliance_expertise' => [
+                'q1' => 'c',  // Assessment
+                'q2' => 'a',  // Managing different requirements across multiple states
+                'q3' => 'c',  // Board meetings and corporate minutes
+                'q4' => 'b',  // Through proactive monitoring systems and regular compliance updates with impact assessments
+                'q5' => 'd'   // Legal representation in court
+            ],
+            'quiz_implementation' => [
+                'q1' => 'b',  // [chapter_name]_quiz.php
+                'q2' => 'b',  // Via AJAX using the fetch API
+                'q3' => 'c'   // The user should see their score and the correct answers immediately
+            ],
+            'introduction' => [
+                'q1' => 'c',  // Both theoretical knowledge and practical skills
+                'q2' => 'b'   // By practicing with real-world examples
+            ]
         ];
+        
+        // Use the appropriate answer key or a default one
+        $correctAnswers = $quizAnswers[$chapterId] ?? $quizAnswers['chapter_structure'];
         
         $totalQuestions = count($correctAnswers);
         $correctCount = 0;
@@ -185,19 +270,29 @@ class LessonController extends Controller {
                 mkdir($lessonDir, 0755, true);
             }
             
-            // Check if quiz file exists
+            // First check if it's a special quiz in the lesson_template directory
+            $templateQuizPath = LESSONS_PATH . '/lesson_template/' . $chapterId . '_quiz.php';
+            
+            // Check if quiz file exists in the lesson directory or template directory
             $quizPath = $lessonDir . '/' . $chapterId . '_quiz.php';
             
-            if (!file_exists($quizPath)) {
-                // Create a default quiz if one doesn't exist
-                echo $this->generateDefaultQuiz($chapterId, $lessonId, $chapterTitle);
+            if (file_exists($templateQuizPath)) {
+                // Use the template quiz if it exists
+                ob_start();
+                include $templateQuizPath;
+                $html = ob_get_clean();
+                echo $html;
                 exit;
-            } else {
-                // Include the quiz file and capture its output
+            } else if (file_exists($quizPath)) {
+                // Use the lesson-specific quiz if it exists
                 ob_start();
                 include $quizPath;
                 $html = ob_get_clean();
                 echo $html;
+                exit;
+            } else {
+                // Create a default quiz if one doesn't exist
+                echo $this->generateDefaultQuiz($chapterId, $lessonId, $chapterTitle);
                 exit;
             }
         } catch (Exception $e) {
@@ -275,6 +370,70 @@ class LessonController extends Controller {
         HTML;
         
         return $html;
+    }
+    
+    /**
+     * Save lesson feedback submitted by the user
+     */
+    public function saveFeedback() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['success' => false, 'message' => 'User not logged in']);
+            exit;
+        }
+        
+        // Get feedback data
+        $lessonId = $_POST['lesson_id'] ?? null;
+        $rating = $_POST['rating'] ?? null;
+        $comments = $_POST['comments'] ?? '';
+        
+        // Validate input
+        if (!$lessonId || !$rating) {
+            echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+            exit;
+        }
+        
+        // Sanitize inputs
+        $lessonId = filter_var($lessonId, FILTER_SANITIZE_NUMBER_INT);
+        $rating = filter_var($rating, FILTER_SANITIZE_STRING);
+        $comments = filter_var($comments, FILTER_SANITIZE_STRING);
+        
+        try {
+            // Check if feedback already exists for this user and lesson
+            $checkStmt = $this->pdo->prepare("SELECT id FROM lesson_feedback WHERE user_id = ? AND lesson_id = ?");
+            $checkStmt->execute([$_SESSION['user_id'], $lessonId]);
+            $existingFeedback = $checkStmt->fetch();
+            
+            if ($existingFeedback) {
+                // Update existing feedback
+                $stmt = $this->pdo->prepare("UPDATE lesson_feedback SET rating = ?, comments = ?, updated_at = NOW() WHERE id = ?");
+                $success = $stmt->execute([$rating, $comments, $existingFeedback['id']]);
+            } else {
+                // Insert new feedback
+                $stmt = $this->pdo->prepare("INSERT INTO lesson_feedback (user_id, lesson_id, rating, comments, created_at) VALUES (?, ?, ?, ?, NOW())");
+                $success = $stmt->execute([$_SESSION['user_id'], $lessonId, $rating, $comments]);
+            }
+            
+            if ($success) {
+                // Log the feedback activity
+                $activityLogger = new ActivityLogger();
+                $activityLogger->log(
+                    $_SESSION['username'],
+                    'lesson_feedback',
+                    $lessonId,
+                    'Submitted feedback for lesson'
+                );
+                
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to save feedback']);
+            }
+        } catch (Exception $e) {
+            error_log('Error saving feedback: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'An error occurred']);
+        }
+        
+        exit;
     }
     
     public function generateCertificate($lessonId) {

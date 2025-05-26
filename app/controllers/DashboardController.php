@@ -17,6 +17,7 @@ class DashboardController extends Controller {
         $progress = $this->lesson->getUserProgress($_SESSION['user_id']);
         
         // Get available lessons (only those assigned to the student)
+        // This query ensures we only count chapters from currently assigned lessons
         $stmt = $this->pdo->prepare("
             SELECT l.*, 
                    COUNT(DISTINCT c.chapter_id) as total_chapters,
@@ -25,7 +26,7 @@ class DashboardController extends Controller {
             FROM lessons l
             JOIN lesson_assignments la ON l.id = la.lesson_id AND la.user_id = ?
             LEFT JOIN chapters c ON l.id = c.lesson_id
-            LEFT JOIN progress p ON l.id = p.lesson_id AND p.user_id = ?
+            LEFT JOIN progress p ON l.id = p.lesson_id AND p.user_id = ? AND p.chapter_id = c.chapter_id
             WHERE l.active = 1
             GROUP BY l.id
             ORDER BY la.assigned_at DESC
@@ -33,9 +34,42 @@ class DashboardController extends Controller {
         $stmt->execute([$_SESSION['user_id'], $_SESSION['user_id']]);
         $lessons = $stmt->fetchAll();
         
+        // Calculate overall statistics for the student dashboard
+        // This ensures that when lessons are unassigned, the statistics are updated correctly
+        $statsStmt = $this->pdo->prepare("
+            SELECT 
+                SUM(CASE WHEN p.completed = 1 THEN 1 ELSE 0 END) as total_completed_chapters,
+                COUNT(DISTINCT CASE WHEN lesson_completion.is_complete = 1 THEN lesson_completion.lesson_id END) as total_completed_lessons
+            FROM (
+                SELECT 
+                    l.id as lesson_id,
+                    COUNT(DISTINCT c.chapter_id) as total_chapters,
+                    COUNT(DISTINCT CASE WHEN p.completed = 1 THEN p.chapter_id END) as completed_chapters,
+                    CASE WHEN COUNT(DISTINCT c.chapter_id) > 0 AND 
+                              COUNT(DISTINCT c.chapter_id) = COUNT(DISTINCT CASE WHEN p.completed = 1 THEN p.chapter_id END) 
+                         THEN 1 ELSE 0 END as is_complete
+                FROM lessons l
+                JOIN lesson_assignments la ON l.id = la.lesson_id AND la.user_id = ?
+                LEFT JOIN chapters c ON l.id = c.lesson_id
+                LEFT JOIN progress p ON l.id = p.lesson_id AND p.user_id = ? AND p.chapter_id = c.chapter_id
+                WHERE l.active = 1
+                GROUP BY l.id
+            ) as lesson_completion
+            LEFT JOIN lessons l ON lesson_completion.lesson_id = l.id
+            LEFT JOIN chapters c ON l.id = c.lesson_id
+            LEFT JOIN progress p ON l.id = p.lesson_id AND p.user_id = ? AND p.chapter_id = c.chapter_id
+        ");
+        $statsStmt->execute([$_SESSION['user_id'], $_SESSION['user_id'], $_SESSION['user_id']]);
+        $stats = $statsStmt->fetch();
+        
+        // Add overall statistics to the view data
+        $stats['total_completed_chapters'] = $stats['total_completed_chapters'] ?? 0;
+        $stats['total_completed_lessons'] = $stats['total_completed_lessons'] ?? 0;
+        
         return $this->view('dashboard/index', [
             'lessons' => $lessons,
-            'progress' => $progress
+            'progress' => $progress,
+            'stats' => $stats
         ]);
     }
     

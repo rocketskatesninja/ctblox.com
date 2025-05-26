@@ -1,7 +1,106 @@
 <?php $title = $lesson['title']; ?>
 <?php require_once __DIR__ . '/../../includes/header.php'; ?>
 
-<div class="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900" x-data="{ sidebarOpen: true }">
+<!-- Override dark backgrounds in lesson content when in light mode -->
+<style>
+    /* Comprehensive solution to fix all dark backgrounds in lesson content */
+    
+    /* Force light background on the main content area */
+    :root:not(.dark) main,
+    :root:not(.dark) .prose,
+    :root:not(.dark) .chapter-content,
+    :root:not(.dark) .lesson-chapter,
+    :root:not(.dark) [class*="bg-gray-"],
+    :root:not(.dark) [class*="dark:bg-gray-"] {
+        background-color: #ffffff !important;
+        color: #1f2937 !important;
+    }
+    
+    /* Override all background colors in lesson content */
+    :root:not(.dark) * {
+        --tw-bg-opacity: 1 !important;
+    }
+    
+    /* Target specific dark backgrounds */
+    :root:not(.dark) .bg-gray-700,
+    :root:not(.dark) .bg-gray-800,
+    :root:not(.dark) .bg-gray-900,
+    :root:not(.dark) .dark\:bg-gray-700,
+    :root:not(.dark) .dark\:bg-gray-800,
+    :root:not(.dark) .dark\:bg-gray-900 {
+        background-color: #f9fafb !important;
+    }
+    
+    /* Fix colored boxes in light mode */
+    :root:not(.dark) .bg-blue-900,
+    :root:not(.dark) .dark\:bg-blue-900 {
+        background-color: #eff6ff !important;
+    }
+    
+    :root:not(.dark) .bg-green-900,
+    :root:not(.dark) .dark\:bg-green-900 {
+        background-color: #ecfdf5 !important;
+    }
+    
+    :root:not(.dark) .bg-yellow-900,
+    :root:not(.dark) .dark\:bg-yellow-900 {
+        background-color: #fffbeb !important;
+    }
+    
+    :root:not(.dark) .bg-red-900,
+    :root:not(.dark) .dark\:bg-red-900 {
+        background-color: #fef2f2 !important;
+    }
+    
+    /* Fix all text colors in light mode */
+    :root:not(.dark) h1,
+    :root:not(.dark) h2,
+    :root:not(.dark) h3,
+    :root:not(.dark) h4,
+    :root:not(.dark) h5,
+    :root:not(.dark) h6,
+    :root:not(.dark) strong,
+    :root:not(.dark) .text-gray-900,
+    :root:not(.dark) .dark\:text-white {
+        color: #111827 !important;
+    }
+    
+    :root:not(.dark) p,
+    :root:not(.dark) li,
+    :root:not(.dark) span,
+    :root:not(.dark) .text-gray-500,
+    :root:not(.dark) .dark\:text-gray-400 {
+        color: #374151 !important;
+    }
+    
+    /* Fix specific text colors */
+    :root:not(.dark) .text-white,
+    :root:not(.dark) .dark\:text-white {
+        color: #111827 !important;
+    }
+    
+    /* Override any inline styles */
+    :root:not(.dark) [style*="background-color"] {
+        background-color: #ffffff !important;
+    }
+    
+    :root:not(.dark) [style*="color: white"],
+    :root:not(.dark) [style*="color:#fff"],
+    :root:not(.dark) [style*="color: #fff"] {
+        color: #111827 !important;
+    }
+    
+    /* Ensure proper contrast for links */
+    :root:not(.dark) a,
+    :root:not(.dark) .text-blue-500,
+    :root:not(.dark) .text-indigo-500,
+    :root:not(.dark) .dark\:text-blue-400,
+    :root:not(.dark) .dark\:text-indigo-400 {
+        color: #2563eb !important;
+    }
+</style>
+
+<div class="flex h-screen overflow-hidden bg-white dark:bg-gray-900" x-data="{ sidebarOpen: true }">
     <!-- Sidebar -->
     <div x-show="sidebarOpen" 
          class="md:flex md:flex-shrink-0">
@@ -73,9 +172,9 @@
             <div class="flex-1 px-4 flex justify-between">
                 <div class="flex-1 flex">
                     <div class="w-full flex md:ml-0">
-                        <div class="relative w-full">
-                            <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                                <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="relative w-full flex items-center">
+                            <div class="absolute left-3 top-0 bottom-0 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
                                 </svg>
                             </div>
@@ -128,8 +227,11 @@
                             // Get the next chapter ID for auto-scrolling
                             $nextChapterId = isset($lesson['chapters'][$index + 1]) ? $lesson['chapters'][$index + 1]['id'] : null;
                         ?>
-                            <div id="<?= $chapter['id'] ?>" class="chapter-content mb-8 <?= $isDisabled ? 'opacity-50' : '' ?>">
-                                <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                            <?php if ($index > 0): ?>
+                                <hr class="my-12 border-t-2 border-gray-200 dark:border-gray-700">
+                            <?php endif; ?>
+                            <div id="<?= $chapter['id'] ?>" class="chapter-content mb-16 <?= $isDisabled ? 'opacity-50' : '' ?>">
+                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
                                     <?php if ($isDisabled): ?>
                                         <svg class="h-5 w-5 text-gray-400 dark:text-gray-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
@@ -200,6 +302,19 @@
                                 </div>
                             </div>
                         <?php endforeach; ?>
+                        
+                        <?php if ($allChaptersCompleted): ?>
+                        <!-- Lesson Feedback Form -->
+                        <hr class="my-12 border-t-2 border-gray-200 dark:border-gray-700">
+                        <div id="lesson-feedback-section" class="mb-16">
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Lesson Feedback</h2>
+                            <?php 
+                            // Include the feedback form template
+                            $lessonId = $lesson['id'];
+                            include __DIR__ . '/../../templates/feedback_form.php';
+                            ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -245,7 +360,24 @@
              x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
              x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
              class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-            <div id="quiz-content" class="dark:text-white"></div>
+            <div class="absolute top-0 right-0 pt-4 pr-4">
+                <button type="button" @click="open = false" class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-indigo-400">
+                    <span class="sr-only">Close</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="sm:flex sm:items-start">
+                <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
+                        Quiz
+                    </h3>
+                    <div class="mt-4">
+                        <div id="quiz-content" class="dark:text-white"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -394,34 +526,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return firstIncomplete;
     }
     
-    // Check if we need to scroll to a specific chapter after marking one as complete
-    const scrollToChapter = localStorage.getItem('scrollToChapter');
-    if (scrollToChapter) {
-        // Clear the localStorage item
+    // Remove any stored scroll position from localStorage
+    if (localStorage.getItem('scrollToChapter')) {
         localStorage.removeItem('scrollToChapter');
-        
-        // Find the chapter element
-        const chapterElement = document.getElementById(scrollToChapter);
-        if (chapterElement) {
-            // Scroll to the chapter with a small delay to ensure the page is fully loaded
-            setTimeout(() => {
-                chapterElement.scrollIntoView({ behavior: 'smooth' });
-                
-                // Add a highlight effect to the chapter
-                chapterElement.classList.add('bg-yellow-50', 'dark:bg-yellow-900/20');
-                setTimeout(() => {
-                    chapterElement.classList.remove('bg-yellow-50', 'dark:bg-yellow-900/20');
-                }, 2000);
-            }, 500);
-        }
-    } else {
-        // If no specific chapter to scroll to, automatically scroll to the first incomplete chapter
-        const firstIncompleteChapter = findFirstIncompleteChapter();
-        if (firstIncompleteChapter) {
-            setTimeout(() => {
-                firstIncompleteChapter.scrollIntoView({ behavior: 'smooth' });
-            }, 500);
-        }
     }
+    
+    // No auto-scrolling - let users control their own navigation
 });
 </script>
