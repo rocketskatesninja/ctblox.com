@@ -335,6 +335,27 @@ function editLesson(lesson) {
     originalForm.querySelector('#edit-author').value = lesson.author;
     originalForm.querySelector('#edit-version').value = lesson.version;
     
+    // Make sure the form submits properly
+    originalForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        // Submit the form data
+        fetch('/admin/lessons', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(new FormData(originalForm))
+        })
+        .then(response => {
+            closeEditLessonModal();
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while saving the lesson. Please try again.');
+        });
+    });
+    
     // Add a title with appropriate dark mode styling
     const title = document.createElement('h3');
     title.textContent = 'Edit Lesson';

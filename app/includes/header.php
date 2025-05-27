@@ -6,26 +6,27 @@ require_once __DIR__ . '/config.php';
 <head>
     <!-- Anti-flash script - must be first in head -->
     <script>
-        (function() {
-            // Function to apply theme based on preference
-            function applyTheme() {
-                // Check for dark mode preference
-                var savedDarkMode = localStorage.getItem('darkMode');
-                var prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                var isDarkMode = savedDarkMode === 'enabled' || (savedDarkMode === null && prefersDarkMode);
-                
-                // Set class on html element immediately
-                if (isDarkMode) {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.classList.remove('light');
-                    if (document.body) document.body.classList.add('dark-mode');
-                } else {
-                    document.documentElement.classList.add('light');
-                    document.documentElement.classList.remove('dark');
-                    if (document.body) document.body.classList.remove('dark-mode');
-                }
-            }
+        // Function to apply theme based on preference - defined globally
+        function applyTheme() {
+            // Check for dark mode preference
+            var savedDarkMode = localStorage.getItem('darkMode');
+            var prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var isDarkMode = savedDarkMode === 'enabled' || (savedDarkMode === null && prefersDarkMode);
             
+            // Set class on html element immediately
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+                if (document.body) document.body.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+                if (document.body) document.body.classList.remove('dark-mode');
+            }
+        }
+        
+        // Self-executing function for initial setup
+        (function() {
             // Apply theme immediately
             applyTheme();
             
@@ -83,6 +84,38 @@ require_once __DIR__ . '/config.php';
         html.light .hover\:bg-gray-100:hover,
         html.light .hover\:bg-gray-200:hover { background-color: #f3f4f6 !important; }
         html.light .dark\:hover\:bg-gray-700:hover { background-color: #f3f4f6 !important; }
+        
+        /* Fix blue buttons and highlighting in light mode */
+        html.light .bg-blue-600,
+        html.light .bg-indigo-600,
+        html.light .bg-indigo-700 { background-color: #4f46e5 !important; color: white !important; }
+        
+        html.light .hover\:bg-blue-700:hover,
+        html.light .hover\:bg-indigo-700:hover { background-color: #4338ca !important; }
+        
+        html.light .bg-blue-100,
+        html.light .bg-indigo-100 { background-color: #e0e7ff !important; }
+        
+        html.light .text-blue-600,
+        html.light .text-indigo-600,
+        html.light .text-purple-600,
+        html.light .text-purple-700,
+        html.light .text-purple-800 { color: #7e22ce !important; }
+        
+        html.light .border-blue-500,
+        html.light .border-indigo-500 { border-color: #6366f1 !important; }
+        
+        /* Fix highlighted elements */
+        html.light .bg-blue-50,
+        html.light .bg-indigo-50,
+        html.light .bg-purple-50 { background-color: #eef2ff !important; }
+        
+        /* Fix focus states */
+        html.light .focus\:ring-blue-500:focus,
+        html.light .focus\:ring-indigo-500:focus { --tw-ring-color: rgba(99, 102, 241, 0.5) !important; }
+        
+        html.light .focus\:border-blue-500:focus,
+        html.light .focus\:border-indigo-500:focus { border-color: #6366f1 !important; }
     </style>
     
     <meta charset="UTF-8">
@@ -195,8 +228,10 @@ require_once __DIR__ . '/config.php';
                 
                 if (document.documentElement.classList.contains('dark')) {
                     enableLightMode();
+                    applyTheme(); // Call the global applyTheme function
                 } else {
                     enableDarkMode();
+                    applyTheme(); // Call the global applyTheme function
                 }
             });
         }

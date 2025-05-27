@@ -381,6 +381,21 @@ class AdminController extends Controller {
                         $this->flash('Error deleting lesson', 'error');
                     }
                     break;
+                
+                case 'update':
+                    $lessonData = [
+                        'title' => $_POST['title'] ?? '',
+                        'description' => $_POST['description'] ?? '',
+                        'author' => $_POST['author'] ?? '',
+                        'version' => $_POST['version'] ?? '1.0'
+                    ];
+                    
+                    if ($this->lesson->update($lessonId, $lessonData)) {
+                        $this->flash('Lesson updated successfully', 'success');
+                    } else {
+                        $this->flash('Error updating lesson', 'error');
+                    }
+                    break;
                     
                 case 'scan':
                     $result = $this->scanLessons();
@@ -538,6 +553,11 @@ class AdminController extends Controller {
                         continue;
                     }
                     
+                    // Format the lesson title properly if it's using the directory name
+                    if ($title === $lessonDirName) {
+                        $title = $this->formatLessonTitle($lessonDirName);
+                    }
+                    
                     // Prepare lesson data
                     $lessonData = [
                         'filename' => $lessonDirName,
@@ -592,6 +612,28 @@ class AdminController extends Controller {
                 'message' => $errorMessage
             ];
         }
+    }
+    
+    /**
+     * Format a lesson directory name into a properly formatted title
+     * 
+     * @param string $dirName The directory name to format
+     * @return string The formatted title
+     */
+    private function formatLessonTitle($dirName) {
+        // Replace underscores with spaces
+        $title = str_replace('_', ' ', $dirName);
+        
+        // Capitalize each word
+        $title = ucwords($title);
+        
+        // Handle common acronyms
+        $acronyms = ['Dns' => 'DNS', 'Sql' => 'SQL', 'Php' => 'PHP', 'Html' => 'HTML', 'Css' => 'CSS', 'Ftp' => 'FTP'];
+        foreach ($acronyms as $word => $acronym) {
+            $title = str_replace($word, $acronym, $title);
+        }
+        
+        return $title;
     }
     
     public function settings() {
@@ -662,125 +704,54 @@ class AdminController extends Controller {
             $settings[$row['setting_key']] = $row['setting_value'];
         }
         
+        // Get system status information for the System Info section
+        $systemInfo = [
+            'php_version' => phpversion(),
+            'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+            'database_version' => $this->getDatabaseVersion(),
+            'operating_system' => php_uname('s') . ' ' . php_uname('r'),
+            'max_upload_size' => ini_get('upload_max_filesize'),
+            'max_post_size' => ini_get('post_max_size'),
+            'memory_limit' => ini_get('memory_limit'),
+            'max_execution_time' => ini_get('max_execution_time') . ' seconds',
+        ];
+        
         return $this->view('admin/settings', [
             'settings' => $settings,
+            'systemInfo' => $systemInfo,
             'csrf_token' => $this->generateCsrfToken()
         ]);
     }
     
     /**
-     * Send a welcome email to a newly created user with their login credentials
+     * Get the database version
      * 
-     * @param string $username The username
-     * @param string $email The user's email address
-     * @param string $password The user's password
-     * @return bool Whether the email was sent successfully
+     * @return string The database version
      */
-    private function sendWelcomeEmail($username, $email, $password) {
+    private function getDatabaseVersion() {
         try {
-            // Get email settings from database
-            $settings = [];
-            $stmt = $this->pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE 'smtp_%'");
-            while ($row = $stmt->fetch()) {
-                $settings[$row['setting_key']] = $row['setting_value'];
-            }
-            
-            // Extract email settings
-            $smtpHost = $settings['smtp_host'] ?? '';
-            $smtpPort = $settings['smtp_port'] ?? '587';
-            $smtpEncryption = $settings['smtp_encryption'] ?? 'tls';
-            $smtpAuthEnabled = ($settings['smtp_auth_enabled'] ?? '1') === '1';
-            $smtpVerifySsl = ($settings['smtp_verify_ssl'] ?? '1') === '1';
-            $smtpFromEmail = $settings['smtp_from_email'] ?? 'noreply@example.com';
-            $smtpFromName = $settings['smtp_from_name'] ?? 'CT Blox System';
-            
-            // Auth credentials only used if auth is enabled
-            $smtpUser = $smtpAuthEnabled ? ($settings['smtp_username'] ?? '') : '';
-            $smtpPass = $smtpAuthEnabled ? ($settings['smtp_password'] ?? '') : '';
-            
-            // Skip if SMTP host is not configured
-            if (empty($smtpHost)) {
-                error_log("Cannot send welcome email: SMTP host not configured");
-                return false;
-            }
-            
-            // Create the Transport
-            $transport = new Swift_SmtpTransport($smtpHost, $smtpPort);
-            
-            // Set encryption if not 'none'
-            if ($smtpEncryption !== 'none') {
-                $transport->setEncryption($smtpEncryption);
-            }
-            
-            // Set auth credentials if auth is enabled
-            if ($smtpAuthEnabled) {
-                $transport->setUsername($smtpUser);
-                $transport->setPassword($smtpPass);
-            }
-            
-            // Set SSL verification option
-            if (!$smtpVerifySsl) {
-                $transport->setStreamOptions(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
-            }
-            
-            // Create the Mailer using your created Transport
-            $mailer = new Swift_Mailer($transport);
-            
-            // Get the site URL
-            $siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://") . $_SERVER['HTTP_HOST'];
-            
-            // Create a message
-            $message = new Swift_Message('Welcome to CT Blox Training Platform');
-            $message->setFrom([$smtpFromEmail => $smtpFromName]);
-            $message->setTo([$email]);
-            $message->setBody(
-                '<html>' .                
-                '<head>' .                
-                '<title>Welcome to CT Blox</title>' .                
-                '<style>' .
-                'body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }' .
-                '.container { max-width: 600px; margin: 0 auto; padding: 20px; }' .
-                '.header { background-color: #4f46e5; color: white; padding: 20px; text-align: center; }' .
-                '.content { padding: 20px; border: 1px solid #ddd; }' .
-                '.credentials { background-color: #f9fafb; padding: 15px; border-radius: 5px; margin: 20px 0; }' .
-                '.button { display: inline-block; background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }' .
-                '</style>' .
-                '</head>' .                
-                '<body>' .                
-                '<div class="container">' .
-                '<div class="header"><h1>Welcome to CT Blox Training Platform</h1></div>' .
-                '<div class="content">' .
-                '<p>Hello ' . htmlspecialchars($username) . ',</p>' .                
-                '<p>Your account has been created on the CT Blox Training Platform. You can now log in using the following credentials:</p>' .                
-                '<div class="credentials">' .
-                '<p><strong>Username:</strong> ' . htmlspecialchars($username) . '</p>' .                
-                '<p><strong>Password:</strong> ' . htmlspecialchars($password) . '</p>' .                
-                '</div>' .
-                '<p>Please keep this information secure and consider changing your password after your first login.</p>' .
-                '<p><a href="' . $siteUrl . '/login" class="button">Login Now</a></p>' .
-                '<p>If you have any questions, please contact your administrator.</p>' .
-                '</div>' .
-                '</div>' .
-                '</body>' .                
-                '</html>',                
-                'text/html'
-            );
-            
-            // Send the message
-            $result = $mailer->send($message);
-            
-            if ($result) {
-                $this->flash('Welcome email sent to ' . $email, 'success');
-                return true;
-            } else {
-                error_log("Failed to send welcome email to $email");
-                return false;
-            }
-        } catch (Exception $e) {
-            error_log("Error sending welcome email: " . $e->getMessage());
-            return false;
+            $stmt = $this->pdo->query("SELECT VERSION() as version");
+            $result = $stmt->fetch();
+            return $result['version'] ?? 'Unknown';
+        } catch (PDOException $e) {
+            error_log("Error getting database version: " . $e->getMessage());
+            return 'Unknown';
         }
     }
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
     
     public function testEmail() {
         // Accept both AJAX and direct API calls

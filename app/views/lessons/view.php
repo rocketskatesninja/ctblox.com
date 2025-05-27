@@ -1,6 +1,9 @@
 <?php $title = $lesson['title']; ?>
 <?php require_once __DIR__ . '/../../includes/header.php'; ?>
 
+<!-- Include the standardized quiz system -->
+<script src="/assets/js/quiz-system.js"></script>
+
 <!-- Override dark backgrounds in lesson content when in light mode -->
 <style>
     /* Comprehensive solution to fix all dark backgrounds in lesson content */
@@ -252,6 +255,12 @@
 
                                 <!-- Quiz section moved to chapter completion flow -->
 
+                                <!-- Chapter subsection navigation -->
+                                <div class="mb-8" id="chapter-subsections">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Chapter Sections</h3>
+                                    <div class="subsection-links space-y-2"></div>
+                                </div>
+                                
                                 <div class="mt-6">
                                     <?php if (!$isDisabled): ?>
                                         <?php if (isset($progress[$chapter['id']]) && $progress[$chapter['id']]): ?>
@@ -532,5 +541,184 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // No auto-scrolling - let users control their own navigation
+    
+    // Process chapter subsections
+    const chapterContents = document.querySelectorAll('.chapter-content');
+    
+    chapterContents.forEach(chapterContent => {
+        const subsectionContainer = chapterContent.querySelector('#chapter-subsections');
+        if (!subsectionContainer) return;
+        
+        const subsectionLinksContainer = subsectionContainer.querySelector('.subsection-links');
+        
+        // Find all h3 elements within the chapter content
+        const subsections = chapterContent.querySelectorAll('h3');
+        
+        if (subsections.length > 0) {
+            // Show the subsection navigation
+            subsectionContainer.style.display = 'block';
+            
+            // Create navigation links for each subsection
+            subsections.forEach((subsection, index) => {
+                // Add an ID to the subsection if it doesn't have one
+                if (!subsection.id) {
+                    const subsectionId = 'subsection-' + Math.random().toString(36).substr(2, 9);
+                    subsection.id = subsectionId;
+                }
+                
+                // Create a link to the subsection
+                const link = document.createElement('a');
+                link.href = '#' + subsection.id;
+                link.className = 'block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white';
+                link.textContent = subsection.textContent;
+                
+                // Add the link to the subsection navigation
+                const linkContainer = document.createElement('div');
+                linkContainer.appendChild(link);
+                subsectionLinksContainer.appendChild(linkContainer);
+            });
+        } else {
+            // Hide the subsection navigation if there are no subsections
+            subsectionContainer.style.display = 'none';
+        }
+    });
+    
+    // Check if we're using the standardized quiz system
+    if (typeof window.initQuiz !== 'function') {
+        console.log('Using fallback quiz initialization');
+        // Fallback quiz initialization for backward compatibility
+        window.initQuiz = function(quizId, answers) {
+            const quizContainer = document.querySelector(`[data-quiz-id="${quizId}"]`);
+            if (!quizContainer) {
+                console.error(`Quiz container with ID ${quizId} not found`);
+                return;
+            }
+            
+            const form = quizContainer.querySelector('form');
+            const questions = quizContainer.querySelectorAll('.quiz-question');
+            const results = quizContainer.querySelector('.quiz-results');
+            
+            if (!form || !questions.length || !results) {
+                console.error(`Quiz ${quizId} is missing required elements`);
+                return;
+            }
+            
+            const resultsMessage = results.querySelector('.results-message');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                let score = 0;
+                let totalQuestions = questions.length;
+                let unansweredQuestions = 0;
+                
+                // Process each question
+                questions.forEach(question => {
+                    const questionId = question.dataset.questionId;
+                    const selectedOption = form.querySelector(`input[name="question${questionId}"]:checked`);
+                    const feedback = question.querySelector('.answer-feedback');
+                    
+                    if (!feedback) {
+                        console.error(`Feedback element not found for question ${questionId}`);
+                        return;
+                    }
+                    
+                    feedback.classList.remove('hidden', 'text-green-600', 'text-red-600');
+                    
+                    if (!selectedOption) {
+                        feedback.textContent = 'Please select an answer.';
+                        feedback.classList.add('text-red-600');
+                        unansweredQuestions++;
+                        return;
+                    }
+                    
+                    const userAnswer = selectedOption.value;
+                    const correctAnswer = answers[questionId];
+                    
+                    if (userAnswer === correctAnswer) {
+                        feedback.textContent = 'Correct!';
+                        feedback.classList.add('text-green-600');
+                        score++;
+                    } else {
+                        feedback.textContent = 'Incorrect. Please try again.';
+                        feedback.classList.add('text-red-600');
+                    }
+                    
+                    feedback.classList.remove('hidden');
+                });
+                
+                // If there are unanswered questions, don't show results yet
+                if (unansweredQuestions > 0) {
+                    return;
+                }
+                
+                // Calculate percentage
+                const percentage = Math.round((score / totalQuestions) * 100);
+                
+                // Show results
+                let message = `You scored ${score} out of ${totalQuestions} (${percentage}%).`;
+                
+                if (percentage >= 80) {
+                    message += ' Great job! You have a good understanding of this topic.';
+                } else if (percentage >= 60) {
+                    message += ' Good effort! Review the material and try again to improve your score.';
+                } else {
+                    message += ' You might want to review the chapter material before trying again.';
+                }
+                
+                resultsMessage.textContent = message;
+                form.classList.add('hidden');
+                results.classList.remove('hidden');
+                
+                // Submit quiz result to server using the existing submitQuiz function
+                const formData = new FormData();
+                formData.append('quiz_id', quizId);
+                formData.append('score', score);
+                formData.append('total', totalQuestions);
+                formData.append('percentage', percentage);
+                
+                // Create a form element to pass to the submitQuiz function
+                const tempForm = document.createElement('form');
+                tempForm.method = 'POST';
+                tempForm.action = '/lesson/quiz';
+                
+                // Add the form data to the temp form
+                for (const [key, value] of formData.entries()) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    tempForm.appendChild(input);
+                }
+                
+                // Submit the quiz
+                submitQuiz(tempForm);
+            });
+            
+            // Retake quiz button
+            const retakeButton = results.querySelector('.retake-quiz');
+            if (retakeButton) {
+                retakeButton.addEventListener('click', function() {
+                    // Reset form
+                    form.reset();
+                    
+                    // Hide all feedback
+                    questions.forEach(question => {
+                        const feedback = question.querySelector('.answer-feedback');
+                        if (feedback) {
+                            feedback.textContent = '';
+                            feedback.classList.add('hidden');
+                        }
+                    });
+                    
+                    // Show form, hide results
+                    form.classList.remove('hidden');
+                    results.classList.add('hidden');
+                });
+            }
+            
+            console.log(`Quiz ${quizId} initialized successfully with ${questions.length} questions`);
+        };
+    }
 });
 </script>

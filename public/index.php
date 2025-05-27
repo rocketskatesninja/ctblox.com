@@ -8,6 +8,7 @@ require_once __DIR__ . '/../app/controllers/DashboardController.php';
 require_once __DIR__ . '/../app/controllers/LessonController.php';
 require_once __DIR__ . '/../app/controllers/CoachController.php';
 require_once __DIR__ . '/../app/controllers/ProfileController.php';
+require_once __DIR__ . '/../app/controllers/CertificateController.php';
 require_once __DIR__ . '/../app/controllers/ErrorController.php';
 require_once __DIR__ . '/../app/models/User.php';
 require_once __DIR__ . '/../app/models/Lesson.php';
@@ -25,7 +26,11 @@ $router->add('POST', '/reset-password', 'AuthController', 'resetPassword');
 // Dashboard routes
 $router->add('GET', '/', 'DashboardController', 'index');
 $router->add('GET', '/dashboard', 'DashboardController', 'index');
-$router->add('GET', '/dashboard/certificates', 'DashboardController', 'certificates');
+
+// Certificate routes
+$router->add('GET', '/dashboard/certificates', 'CertificateController', 'index');
+$router->add('GET', '/certificate/view/{id}', 'CertificateController', 'viewCertificate');
+$router->add('GET', '/certificate/download/{id}', 'CertificateController', 'download');
 
 // Lesson routes
 $router->add('GET', '/lesson/{id}', 'LessonController', 'viewLesson');

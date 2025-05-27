@@ -5,15 +5,60 @@
     <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6">
             <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                Welcome back, <?= $this->sanitize($_SESSION['username']) ?>!
+                <?php
+                // Get user's name from database if available
+                $stmt = $this->pdo->prepare("SELECT name FROM users WHERE id = ?");
+                $stmt->execute([$_SESSION['user_id']]);
+                $userData = $stmt->fetch();
+                $displayName = (!empty($userData['name'])) ? $userData['name'] : $_SESSION['username'];
+                ?>
+                Welcome back, <?= $this->sanitize($displayName) ?>!
             </h3>
             <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                 Continue your learning journey or start a new lesson.
             </p>
         </div>
         <div class="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:px-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <!-- Progress Overview Section -->
+            <div class="mb-6">
+                <h4 class="text-base font-medium text-gray-900 dark:text-white mb-3">Progress Overview</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Chapter Progress -->
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center justify-between mb-2">
+                            <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300">Chapter Progress</h5>
+                            <span class="text-sm font-semibold text-indigo-600 dark:text-indigo-400"><?= $stats['chapter_completion_percentage'] ?>%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 mb-2">
+                            <div class="bg-indigo-600 dark:bg-indigo-400 h-2.5 rounded-full" style="width: <?= $stats['chapter_completion_percentage'] ?>%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <span><?= $stats['total_completed_chapters'] ?> completed</span>
+                            <span><?= $stats['total_assigned_chapters'] ?> total</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Lesson Progress -->
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center justify-between mb-2">
+                            <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300">Lesson Progress</h5>
+                            <span class="text-sm font-semibold text-green-600 dark:text-green-400"><?= $stats['lesson_completion_percentage'] ?>%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 mb-2">
+                            <div class="bg-green-600 dark:bg-green-400 h-2.5 rounded-full" style="width: <?= $stats['lesson_completion_percentage'] ?>%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <span><?= $stats['total_completed_lessons'] ?> completed</span>
+                            <span><?= $stats['total_assigned_lessons'] ?> total</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistics Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Chapters Completed -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-sm">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-md p-2">
                             <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-300" fill="currentColor" viewBox="0 0 20 20">
@@ -26,7 +71,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                
+                <!-- Lessons Completed -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-sm">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 bg-green-100 dark:bg-green-900 rounded-md p-2">
                             <svg class="h-6 w-6 text-green-600 dark:text-green-300" fill="currentColor" viewBox="0 0 20 20">
@@ -39,7 +86,48 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Quizzes Taken -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900 rounded-md p-2">
+                            <svg class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">Quizzes Taken</h4>
+                            <p class="mt-1 text-2xl font-semibold text-blue-600 dark:text-blue-400"><?= $stats['total_quizzes_taken'] ?></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Average Quiz Score -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900 rounded-md p-2">
+                            <svg class="h-6 w-6 text-purple-600 dark:text-purple-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">Average Quiz Score</h4>
+                            <p class="mt-1 text-2xl font-semibold text-purple-600 dark:text-purple-400"><?= $stats['average_quiz_score'] ?>%</p>
+                        </div>
+                    </div>
+                </div>
             </div>
+            
+            <!-- Last Activity -->
+            <?php if ($stats['last_activity_date']): ?>
+            <div class="mt-4 text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                </svg>
+                Last activity: <?= date('F j, Y g:i a', strtotime($stats['last_activity_date'])) ?>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -85,7 +173,7 @@
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-indigo-600 dark:text-indigo-400"><?= $this->sanitize($lesson['title']) ?></div>
                                             <div class="text-sm text-gray-500 dark:text-gray-400">
-                                                <?= $this->sanitize(substr($lesson['description'], 0, 100)) ?><?= strlen($lesson['description']) > 100 ? '...' : '' ?>
+                                                <?= $this->sanitize(substr($lesson['custom_summary'], 0, 120)) ?><?= strlen($lesson['custom_summary']) > 120 ? '...' : '' ?>
                                             </div>
                                         </div>
                                     </div>

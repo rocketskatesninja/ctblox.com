@@ -227,52 +227,36 @@ $title = 'System Settings';
                     <div class="sm:col-span-6 border-b border-gray-200 pb-5 mb-5 mt-6">
                         <h4 class="text-base font-medium text-gray-900 flex items-center">
                             <svg class="h-5 w-5 text-gray-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                                <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z" clip-rule="evenodd" />
                             </svg>
                             Certificate Settings
                         </h4>
-                        <p class="mt-1 text-sm text-gray-500">Configure how certificates are generated for completed courses.</p>
                     </div>
                     
                     <div class="sm:col-span-6">
                         <label for="certificate_template" class="block text-sm font-medium text-gray-700">Certificate Template</label>
                         <div class="mt-1">
-                            <select name="certificate_template" id="certificate_template"
-                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full max-w-lg text-base border-gray-300 rounded-md h-10 px-3">
-                                <option value="standard" <?= ($settings['certificate_template'] ?? 'standard') === 'standard' ? 'selected' : '' ?>>Standard Template</option>
-                                <option value="professional" <?= ($settings['certificate_template'] ?? '') === 'professional' ? 'selected' : '' ?>>Professional Template</option>
-                                <option value="corporate" <?= ($settings['certificate_template'] ?? '') === 'corporate' ? 'selected' : '' ?>>Corporate Template</option>
-                            </select>
+                            <textarea id="certificate_template" name="certificate_template" rows="10"
+                                      class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-base border-gray-300 rounded-md"><?= isset($settings['certificate_template']) ? htmlspecialchars($settings['certificate_template']) : '' ?></textarea>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">HTML template for certificates. Use {{username}}, {{lesson_title}}, {{completion_date}} as placeholders.</p>
+                        <div class="mt-3">
+                            <button type="button" onclick="previewCertificate()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                Preview Certificate
+                            </button>
+                        </div>
+                        <div id="certificate-preview" class="mt-4 p-4 border border-gray-200 rounded-lg hidden">
+                            <h5 class="text-base font-medium text-gray-900 mb-4">Certificate Preview</h5>
+                            <div id="certificate-preview-content" class="bg-white p-6 border border-gray-300 rounded-lg shadow-sm"></div>
                         </div>
                     </div>
+                    
 
-                    <div class="sm:col-span-3">
-                        <label for="certificate_logo" class="block text-sm font-medium text-gray-700">Company Logo URL</label>
-                        <div class="mt-1">
-                            <input type="text" name="certificate_logo" id="certificate_logo"
-                                   value="<?= $settings['certificate_logo'] ?? '/assets/images/logo.png' ?>"
-                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-base border-gray-300 rounded-md h-10 px-3">
-                        </div>
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="certificate_signature" class="block text-sm font-medium text-gray-700">Signature Image URL</label>
-                        <div class="mt-1">
-                            <input type="text" name="certificate_signature" id="certificate_signature"
-                                   value="<?= $settings['certificate_signature'] ?? '/assets/images/signature.png' ?>"
-                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-base border-gray-300 rounded-md h-10 px-3">
-                        </div>
-                    </div>
-
-                    <div class="sm:col-span-6">
-                        <label for="certificate_text" class="block text-sm font-medium text-gray-700">Certificate Text Template</label>
-                        <div class="mt-1">
-                            <textarea name="certificate_text" id="certificate_text" rows="3"
-                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-base border-gray-300 rounded-md"><?= $settings['certificate_text'] ?? 'This is to certify that {name} has successfully completed the {course} course on {date}.' ?></textarea>
-                            <p class="mt-1 text-sm text-gray-500">Use {name}, {course}, and {date} as placeholders.</p>
-                        </div>
-                    </div>
-
+                    
                     <div class="sm:col-span-6">
                         <div class="flex justify-end space-x-3">
                             <a href="/admin/dashboard" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -350,6 +334,37 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function previewCertificate() {
-    alert('Certificate preview functionality will be implemented in a future update.');
+    const templateContent = document.getElementById('certificate_template').value;
+    if (!templateContent.trim()) {
+        alert('Please enter a certificate template first.');
+        return;
+    }
+    
+    // Sample data for preview
+    const sampleData = {
+        username: 'John Smith',
+        lesson_title: 'WordPress Troubleshooting',
+        completion_date: new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        })
+    };
+    
+    // Replace placeholders with sample data
+    let previewContent = templateContent;
+    for (const [key, value] of Object.entries(sampleData)) {
+        previewContent = previewContent.replace(new RegExp('{{' + key + '}}', 'g'), value);
+    }
+    
+    // Display the preview
+    const previewContainer = document.getElementById('certificate-preview');
+    const previewContentElement = document.getElementById('certificate-preview-content');
+    
+    previewContentElement.innerHTML = previewContent;
+    previewContainer.classList.remove('hidden');
+    
+    // Scroll to the preview
+    previewContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 </script>

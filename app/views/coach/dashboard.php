@@ -60,21 +60,19 @@ $title = 'Coach Dashboard';
                     <tbody class="bg-white divide-y divide-gray-200">
                         <?php foreach ($students as $student): ?>
                             <?php
-                            // Calculate overall progress
-                            $totalCompletedChapters = 0;
-                            $totalChapters = 0;
-                            $lastActivity = null;
+                            // Get the overall progress data from the model
+                            $progressData = $student['overall_progress'];
+                            $overallPercentage = $progressData['chapter_completion_percentage'];
+                            $totalCompletedChapters = $progressData['completed_chapters'];
+                            $totalChapters = $progressData['total_chapters'];
                             
+                            // Find the last activity
+                            $lastActivity = null;
                             foreach ($student['progress'] as $lessonTitle => $progress) {
-                                $totalCompletedChapters += $progress['completed_chapters'];
-                                $totalChapters += $progress['total_chapters'];
-                                
                                 if ($progress['last_activity'] && (!$lastActivity || strtotime($progress['last_activity']) > strtotime($lastActivity))) {
                                     $lastActivity = $progress['last_activity'];
                                 }
                             }
-                            
-                            $overallPercentage = $totalChapters > 0 ? round(($totalCompletedChapters / $totalChapters) * 100) : 0;
                             ?>
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">

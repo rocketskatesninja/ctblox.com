@@ -75,13 +75,17 @@ class CoachController extends Controller {
                 }
             }
             
+            // Get the overall progress for this student
+            $overallProgress = $this->lesson->getOverallProgress($student['id']);
+            
             $studentsWithProgress[] = [
                 'id' => $student['id'],
                 'username' => $student['username'],
                 'email' => $student['email'],
                 'last_login' => $student['last_login'],
                 'created_at' => $student['created_at'],
-                'progress' => $lessonProgress
+                'progress' => $lessonProgress,
+                'overall_progress' => $overallProgress
             ];
         }
         
