@@ -1,7 +1,6 @@
 <div class="lesson-chapter">
     
     <div class="mb-6">
-        <h2 class="text-2xl font-bold mb-3">Creating a Customer Experience Strategy</h2>
         <p class="mb-3">A customer experience (CX) strategy is a deliberate plan for delivering consistent, meaningful experiences across all customer touchpoints. For small businesses, a well-crafted CX strategy can be a powerful competitive advantage that drives loyalty, retention, and growth.</p>
         
         <p class="mb-3">In this chapter, we'll explore how to develop a comprehensive CX strategy that aligns with your brand values and business goals while meeting the evolving expectations of your customers.</p>

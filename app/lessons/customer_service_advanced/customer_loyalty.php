@@ -1,7 +1,6 @@
 <div class="lesson-chapter">
     
     <div class="mb-6">
-        <h2 class="text-2xl font-bold mb-3">Building Customer Loyalty Programs</h2>
         <p class="mb-3">Customer loyalty programs are structured marketing strategies designed to encourage customers to continue using your products or services. For small businesses, an effective loyalty program can significantly increase customer retention, boost revenue, and create brand advocates.</p>
         
         <p class="mb-3">This chapter explores how to design, implement, and optimize loyalty programs that drive meaningful results for your small business.</p>

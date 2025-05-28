@@ -2,7 +2,7 @@
 <?php require_once __DIR__ . '/../../includes/header.php'; ?>
 
 <!-- Include the standardized quiz system -->
-<script src="/assets/js/quiz-system.js"></script>
+<script src="/js/quiz-system.js"></script>
 
 <!-- Override dark backgrounds in lesson content when in light mode -->
 <style>
@@ -403,7 +403,17 @@ function startQuiz(chapterId) {
     fetch(`/lesson/quiz/${chapterId}`)
         .then(response => response.text())
         .then(html => {
-            document.getElementById('quiz-content').innerHTML = html;
+            const quizContentDiv = document.getElementById('quiz-content');
+            quizContentDiv.innerHTML = html;
+            const quizForm = quizContentDiv.querySelector('form'); // Assumes there's one form
+            if (quizForm) {
+                quizForm.addEventListener('submit', function(event) {
+                    event.preventDefault(); // Prevent default page refresh
+                    submitQuiz(this, chapterId);       // Call the existing submitQuiz function, passing chapterId
+                });
+            } else {
+                console.error('Quiz form not found in loaded content for chapter ' + chapterId);
+            }
         })
         .catch(error => {
             console.error('Error loading quiz:', error);
@@ -411,10 +421,11 @@ function startQuiz(chapterId) {
         });
 }
 
-function submitQuiz(form) {
+function submitQuiz(form, chapterId) {
     const formData = new FormData(form);
     formData.append('<?= CSRF_TOKEN_NAME ?>', '<?= $csrf_token ?>');
     formData.append('lesson_id', '<?= $lesson['id'] ?>');
+    formData.append('chapter_id', chapterId); // Add chapter_id
     
     // Add X-Requested-With header to ensure isAjax() returns true on the server
     fetch('/lesson/quiz', {

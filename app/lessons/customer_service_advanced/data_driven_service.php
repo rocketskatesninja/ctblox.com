@@ -1,7 +1,6 @@
 <div class="lesson-chapter">
     
     <div class="mb-6">
-        <h2 class="text-2xl font-bold mb-3">Data-Driven Customer Service</h2>
         <p class="mb-3">In today's digital age, small businesses have unprecedented access to customer data. When used effectively, this data can transform your customer service from reactive problem-solving to proactive experience enhancement.</p>
         
         <p class="mb-3">This chapter explores how to implement data-driven approaches to measure, analyze, and continuously improve your customer service quality, even with limited resources.</p>
