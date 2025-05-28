@@ -26,12 +26,19 @@ $title = 'Manage Lessons';
     </div>
     <?php unset($_SESSION['scan_errors']); ?>
     <?php endif; ?>
-    <div class="bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
+    <div class="bg-white shadow sm:rounded-lg" x-data="{ formOpen: false }">
+        <div class="px-4 py-5 sm:p-6 flex justify-between items-center cursor-pointer" @click="formOpen = !formOpen">
             <h3 class="text-lg leading-6 font-medium text-gray-900">
                 Upload New Lesson
             </h3>
-            <div class="mt-5">
+            <button type="button" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform transition-transform duration-200" :class="{'rotate-180': formOpen}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+        </div>
+        <div class="px-4 py-5 sm:p-6 border-t border-gray-200" x-show="formOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-2">
+            <div class="mt-2">
                 <form action="/admin/lessons" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $csrf_token ?>">
                     <input type="hidden" name="action" value="create">

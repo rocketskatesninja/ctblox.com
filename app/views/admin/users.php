@@ -4,14 +4,21 @@ $title = 'Manage Users';
 ?>
 
 <div class="space-y-6">
-    <div class="bg-white shadow sm:rounded-lg overflow-hidden">
-        <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Create New User
-            </h3>
-            <p class="mt-1 text-sm text-gray-500">Add a new user to the CTBlox Training Platform</p>
+    <div class="bg-white shadow sm:rounded-lg overflow-hidden" x-data="{ formOpen: false }">
+        <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center cursor-pointer" @click="formOpen = !formOpen">
+            <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Create New User
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">Add a new user to the CTBlox Training Platform</p>
+            </div>
+            <button type="button" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform transition-transform duration-200" :class="{'rotate-180': formOpen}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
         </div>
-        <div class="px-4 py-5 sm:p-6">
+        <div class="px-4 py-5 sm:p-6" x-show="formOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-2">
             <form action="/admin/users" method="POST">
                 <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $csrf_token ?>">
                 <input type="hidden" name="action" value="create">
@@ -519,20 +526,57 @@ function generateAndSetPassword(passwordInput, toggleBtn) {
 
 // Setup password controls for create form
 function setupPasswordControls() {
-    const togglePasswordBtn = document.getElementById('togglePassword');
+    // Get elements
     const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('togglePassword');
     const generatePasswordBtn = document.getElementById('generatePassword');
     
+    // Setup toggle password button
     if (togglePasswordBtn && passwordInput) {
-        togglePasswordBtn.addEventListener('click', function() {
-            togglePasswordVisibility(passwordInput, this);
-        });
+        togglePasswordBtn.onclick = function(e) {
+            e.preventDefault();
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Update icon based on password visibility
+            if (type === 'text') {
+                // Show "hide password" icon
+                this.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                `;
+            } else {
+                // Show "show password" icon
+                this.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                `;
+            }
+        };
     }
     
+    // Setup generate password button
     if (generatePasswordBtn && passwordInput) {
-        generatePasswordBtn.addEventListener('click', function() {
-            generateAndSetPassword(passwordInput, togglePasswordBtn);
-        });
+        generatePasswordBtn.onclick = function(e) {
+            e.preventDefault();
+            const password = generateRandomPassword();
+            passwordInput.value = password;
+            
+            // Show the password
+            passwordInput.setAttribute('type', 'text');
+            
+            // Update the toggle button icon if it exists
+            if (togglePasswordBtn) {
+                togglePasswordBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                `;
+            }
+        };
     }
 }
 
@@ -680,18 +724,44 @@ function editUser(user) {
     document.getElementById('edit-is-admin').checked = user.is_admin == 1;
     document.getElementById('edit-is-coach').checked = user.is_coach == 1;
     
-    // Set the username in the title
+    // Determine user role for the title
+    let userRole = 'Student';
+    if (user.is_admin == 1) {
+        userRole = 'Administrator';
+    } else if (user.is_coach == 1) {
+        userRole = 'Coach';
+    }
+    
+    // Set the username and role in the title
     document.getElementById('edit-username-display').textContent = user.username;
+    
+    // Update the modal title to include the role
+    const modalTitle = document.getElementById('modal-title');
+    if (modalTitle) {
+        modalTitle.innerHTML = `Edit ${userRole}: <span id="edit-username-display" class="font-semibold">${user.username}</span>`;
+    }
     
     // Handle coach selection
     const coachSelect = document.getElementById('edit-coach-id');
     if (coachSelect) {
+        // Reset the select first
+        coachSelect.value = '';
+        
+        // If user has a coach_id, select it in the dropdown
         if (user.coach_id) {
-            coachSelect.value = user.coach_id;
-        } else {
-            coachSelect.value = '';
+            // Find the option with the matching value and select it
+            const option = coachSelect.querySelector(`option[value="${user.coach_id}"]`);
+            if (option) {
+                coachSelect.value = user.coach_id;
+                console.log('Selected coach:', option.textContent, 'with ID:', user.coach_id);
+            } else {
+                console.warn('Coach option not found for ID:', user.coach_id);
+            }
         }
     }
+    
+    // Initialize the role dependencies after setting the coach
+    setupEditRoleFieldDependencies();
     
     // Create a completely new modal from scratch
     // First, let's remove any existing modal backdrop
@@ -747,6 +817,15 @@ function editUser(user) {
     
     // Clone the form
     const formClone = originalForm.cloneNode(true);
+    
+    // Ensure the coach selection is properly transferred to the cloned form
+    if (user.coach_id) {
+        const clonedCoachSelect = formClone.querySelector('#edit-coach-id');
+        if (clonedCoachSelect) {
+            clonedCoachSelect.value = user.coach_id;
+            console.log('Setting coach ID in cloned form:', user.coach_id);
+        }
+    }
     
     // Apply appropriate styles based on mode
     // Style form inputs
@@ -1002,37 +1081,13 @@ function setupEditRoleFieldDependencies() {
 
 // Initialize everything when the DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Setup password toggle for create form
-    const togglePasswordBtn = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
+    // Setup all password controls including toggle and generate
+    setupPasswordControls();
     
-    if (togglePasswordBtn && passwordInput) {
-        togglePasswordBtn.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-        });
-    }
+    // Setup role field dependencies
+    setupRoleFieldDependencies();
     
-    // Setup password generator
-    const generatePasswordBtn = document.getElementById('generatePassword');
-    if (generatePasswordBtn && passwordInput) {
-        generatePasswordBtn.addEventListener('click', function() {
-            const length = 12;
-            const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]\\:;?><,./-=';
-            let password = '';
-            for (let i = 0; i < length; i++) {
-                const randomIndex = Math.floor(Math.random() * charset.length);
-                password += charset[randomIndex];
-            }
-            passwordInput.value = password;
-            passwordInput.setAttribute('type', 'text');
-            setTimeout(() => {
-                passwordInput.setAttribute('type', 'password');
-            }, 3000);
-        });
-    }
-    
-    // Setup password toggle for edit form
+    // Setup edit form password controls
     const toggleEditPasswordBtn = document.getElementById('toggleEditPassword');
     const editPasswordInput = document.getElementById('edit-password');
     

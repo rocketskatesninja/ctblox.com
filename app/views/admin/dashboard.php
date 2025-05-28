@@ -226,9 +226,9 @@ $title = 'Admin Dashboard';
 
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <!-- Quick Actions -->
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg h-full flex flex-col">
+        <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg h-full flex flex-col">
             <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white flex items-center">
                     <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
                     </svg>
@@ -237,15 +237,15 @@ $title = 'Admin Dashboard';
             </div>
             <div class="border-t border-gray-200 flex-grow">
                 <div class="p-4 grid grid-cols-1 gap-3 h-full">
-                    <a href="/admin/users" class="group relative bg-white hover:bg-indigo-50 rounded-lg border border-gray-200 p-4 flex items-center transition duration-150 ease-in-out">
+                    <a href="/admin/users" class="quick-action-box group relative bg-white dark:bg-gray-700 hover:bg-indigo-50 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 p-4 flex items-center transition duration-150 ease-in-out">
                         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-md bg-indigo-100 text-indigo-600 sm:h-12 sm:w-12">
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
                             </svg>
                         </div>
                         <div class="ml-4 flex-grow">
-                            <h4 class="text-lg font-medium text-gray-900 group-hover:text-indigo-600 transition duration-150 ease-in-out">Manage Users</h4>
-                            <p class="text-sm text-gray-500">Add, edit, or remove user accounts</p>
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition duration-150 ease-in-out">Manage Users</h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-300">Add, edit, or remove user accounts</p>
                         </div>
                         <div class="flex-shrink-0 self-center ml-2">
                             <svg class="h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
@@ -254,15 +254,15 @@ $title = 'Admin Dashboard';
                         </div>
                     </a>
                     
-                    <a href="/admin/lessons" class="group relative bg-white hover:bg-indigo-50 rounded-lg border border-gray-200 p-4 flex items-center transition duration-150 ease-in-out">
+                    <a href="/admin/lessons" class="quick-action-box group relative bg-white dark:bg-gray-700 hover:bg-indigo-50 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 p-4 flex items-center transition duration-150 ease-in-out">
                         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-md bg-emerald-100 text-emerald-600 sm:h-12 sm:w-12">
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
                             </svg>
                         </div>
                         <div class="ml-4 flex-grow">
-                            <h4 class="text-lg font-medium text-gray-900 group-hover:text-indigo-600 transition duration-150 ease-in-out">Manage Lessons</h4>
-                            <p class="text-sm text-gray-500">Create and organize training content</p>
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition duration-150 ease-in-out">Manage Lessons</h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-300">Create and organize training content</p>
                         </div>
                         <div class="flex-shrink-0 self-center ml-2">
                             <svg class="h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
@@ -271,15 +271,15 @@ $title = 'Admin Dashboard';
                         </div>
                     </a>
                     
-                    <a href="/admin/settings" class="group relative bg-white hover:bg-indigo-50 rounded-lg border border-gray-200 p-4 flex items-center transition duration-150 ease-in-out">
+                    <a href="/admin/settings" class="quick-action-box group relative bg-white dark:bg-gray-700 hover:bg-indigo-50 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 p-4 flex items-center transition duration-150 ease-in-out">
                         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-md bg-blue-100 text-blue-600 sm:h-12 sm:w-12">
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
                             </svg>
                         </div>
                         <div class="ml-4 flex-grow">
-                            <h4 class="text-lg font-medium text-gray-900 group-hover:text-indigo-600 transition duration-150 ease-in-out">System Settings</h4>
-                            <p class="text-sm text-gray-500">Configure platform preferences</p>
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition duration-150 ease-in-out">System Settings</h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-300">Configure platform preferences</p>
                         </div>
                         <div class="flex-shrink-0 self-center ml-2">
                             <svg class="h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
@@ -294,7 +294,7 @@ $title = 'Admin Dashboard';
         <!-- System Status -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg h-full flex flex-col">
             <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white flex items-center">
                     <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
                     </svg>
@@ -385,5 +385,49 @@ $title = 'Admin Dashboard';
         </div>
     </div>
 </div>
+
+<style>
+/* Prevent theme flashing by using CSS variables and transitions */
+:root {
+    --card-bg: #ffffff;
+    --card-text: #111827;
+    --card-border: #e5e7eb;
+    --card-hover: #eef2ff;
+}
+
+.dark {
+    --card-bg: #1f2937;
+    --card-text: #f9fafb;
+    --card-border: #374151;
+    --card-hover: #374151;
+}
+
+/* Apply the CSS variables to the quick action boxes */
+.quick-action-box {
+    background-color: var(--card-bg) !important;
+    color: var(--card-text) !important;
+    border-color: var(--card-border) !important;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.quick-action-box:hover {
+    background-color: var(--card-hover) !important;
+}
+
+.quick-action-box h4 {
+    color: var(--card-text) !important;
+}
+
+/* Add a small delay to ensure the theme is loaded before showing content */
+body {
+    opacity: 0;
+    animation: fadeIn 0.2s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+</style>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
