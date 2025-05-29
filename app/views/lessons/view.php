@@ -703,7 +703,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Submit the quiz
-                submitQuiz(tempForm);
+                // Check if we're using the standardized quiz system or the fallback
+                // Only submit through the fallback if the main system isn't active
+                if (typeof window.updateQuizProgress !== 'function') {
+                    submitQuiz(tempForm);
+                } else {
+                    console.log('Using standardized quiz system, skipping fallback submission');
+                }
             });
             
             // Retake quiz button
