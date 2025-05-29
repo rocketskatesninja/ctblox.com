@@ -407,9 +407,17 @@ function startQuiz(chapterId) {
             quizContentDiv.innerHTML = html;
             const quizForm = quizContentDiv.querySelector('form'); // Assumes there's one form
             if (quizForm) {
-                quizForm.addEventListener('submit', function(event) {
+                // Add a data attribute to indicate this form is handled by the modal
+                quizForm.setAttribute('data-modal-handled', 'true');
+                
+                // Remove any existing event listeners by cloning and replacing the form
+                const newForm = quizForm.cloneNode(true);
+                quizForm.parentNode.replaceChild(newForm, quizForm);
+                
+                // Add our event listener
+                newForm.addEventListener('submit', function(event) {
                     event.preventDefault(); // Prevent default page refresh
-                    submitQuiz(this, chapterId);       // Call the existing submitQuiz function, passing chapterId
+                    submitQuiz(this, chapterId); // Call the existing submitQuiz function, passing chapterId
                 });
             } else {
                 console.error('Quiz form not found in loaded content for chapter ' + chapterId);
@@ -703,13 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Submit the quiz
-                // Check if we're using the standardized quiz system or the fallback
-                // Only submit through the fallback if the main system isn't active
-                if (typeof window.updateQuizProgress !== 'function') {
-                    submitQuiz(tempForm);
-                } else {
-                    console.log('Using standardized quiz system, skipping fallback submission');
-                }
+                submitQuiz(tempForm);
             });
             
             // Retake quiz button
