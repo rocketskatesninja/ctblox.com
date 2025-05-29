@@ -1,8 +1,13 @@
 <?php $title = $lesson['title']; ?>
 <?php require_once __DIR__ . '/../../includes/header.php'; ?>
 
+<!-- Add meta tags for the quiz system -->
+<meta name="lesson-id" content="<?= $lesson['id'] ?>">
+<meta name="csrf-token" content="<?= $csrf_token ?>">
+
+
 <!-- Include the standardized quiz system -->
-<script src="/js/quiz-system.js"></script>
+<script src="/js/quiz-system.js" id="quiz-system-script" data-loaded="true"></script>
 
 <!-- Override dark backgrounds in lesson content when in light mode -->
 <style>
@@ -183,7 +188,8 @@
                             </div>
                             <input id="search" 
                                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 sm:text-sm h-10" 
-                                   placeholder="Search in lesson" 
+                                   style="padding-left: 40px;" 
+                                   placeholder="Search lesson..." 
                                    type="search">
                         </div>
                     </div>
@@ -406,22 +412,93 @@ function startQuiz(chapterId) {
             const quizContentDiv = document.getElementById('quiz-content');
             quizContentDiv.innerHTML = html;
             const quizForm = quizContentDiv.querySelector('form'); // Assumes there's one form
-            if (quizForm) {
-                // Add a data attribute to indicate this form is handled by the modal
-                quizForm.setAttribute('data-modal-handled', 'true');
-                
-                // Remove any existing event listeners by cloning and replacing the form
-                const newForm = quizForm.cloneNode(true);
-                quizForm.parentNode.replaceChild(newForm, quizForm);
-                
-                // Add our event listener
-                newForm.addEventListener('submit', function(event) {
-                    event.preventDefault(); // Prevent default page refresh
-                    submitQuiz(this, chapterId); // Call the existing submitQuiz function, passing chapterId
-                });
-            } else {
+            
+            if (!quizForm) {
                 console.error('Quiz form not found in loaded content for chapter ' + chapterId);
+                return;
             }
+            
+            console.log('Quiz form loaded successfully for chapter ' + chapterId);
+            
+            // Add necessary attributes to the form for the quiz system
+            quizForm.setAttribute('data-quiz-id', chapterId);
+            quizForm.setAttribute('data-chapter-id', chapterId);
+            
+            // Get the quiz questions and answers
+            const questions = quizForm.querySelectorAll('.quiz-question');
+            const answers = {};
+            
+            // Extract correct answers from hidden fields
+            questions.forEach(question => {
+                const questionId = question.getAttribute('data-question-id');
+                const correctAnswer = question.querySelector('input[name="correct_answer"]')?.value;
+                if (questionId && correctAnswer) {
+                    answers[questionId] = correctAnswer;
+                }
+            });
+            
+            // Add a direct submit handler to the form
+            quizForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Process the quiz directly
+                let score = 0;
+                const totalQuestions = questions.length;
+                
+                // Check answers
+                questions.forEach(question => {
+                    const questionId = question.getAttribute('data-question-id');
+                    const selectedInput = question.querySelector(`input[name="question${questionId}"]:checked`);
+                    const correctAnswer = answers[questionId];
+                    
+                    if (selectedInput && selectedInput.value === correctAnswer) {
+                        score++;
+                    }
+                });
+                
+                // Calculate percentage
+                const percentage = Math.round((score / totalQuestions) * 100);
+                
+                // Submit to server
+                const formData = new FormData(quizForm);
+                formData.append('<?= CSRF_TOKEN_NAME ?>', '<?= $csrf_token ?>');
+                formData.append('lesson_id', '<?= $lesson['id'] ?>');
+                formData.append('chapter_id', chapterId);
+                
+                // Add X-Requested-With header to ensure isAjax() returns true on the server
+                fetch('/lesson/quiz', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show a success message before reloading
+                        const score = data.score || 0;
+                        
+                        if (data.passed) {
+                            alert(`Congratulations! Your score: ${score}%. You have passed this quiz and the chapter has been marked as complete.`);
+                        } else {
+                            alert(`Quiz submitted. Your score: ${score}%. You need to score at least 80% to pass and unlock the next chapter.`);
+                        }
+                        
+                        // Close the modal
+                        document.querySelector('#quiz-modal button[type="button"]').click();
+                        
+                        // Reload the page to update the UI
+                        setTimeout(() => location.reload(), 500);
+                    } else {
+                        alert('Error saving quiz result: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Quiz submission error:', error);
+                    alert('There was a problem submitting your quiz. Please try again.');
+                });
+            });
         })
         .catch(error => {
             console.error('Error loading quiz:', error);
@@ -429,6 +506,9 @@ function startQuiz(chapterId) {
         });
 }
 
+// DISABLED: This function was causing duplicate quiz submissions
+// Using the external quiz-system.js instead
+/*
 function submitQuiz(form, chapterId) {
     const formData = new FormData(form);
     formData.append('<?= CSRF_TOKEN_NAME ?>', '<?= $csrf_token ?>');
@@ -478,47 +558,110 @@ function submitQuiz(form, chapterId) {
     
     return false;
 }
+*/
 
-// Search functionality
-document.getElementById('search').addEventListener('input', function(e) {
-    const searchText = e.target.value.toLowerCase();
-    const content = document.querySelector('main');
-    
-    if (!searchText) {
-        // Remove all highlights
-        content.innerHTML = content.innerHTML.replace(/<mark>/g, '').replace(/<\/mark>/g, '');
+// Placeholder function to prevent errors if called
+function submitQuiz(form, chapterId) {
+    console.log('Legacy submitQuiz function called but disabled to prevent duplicate submissions');
+    return false;
+}
+
+// Simple search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search');
+    if (!searchInput) {
+        console.error('Search input not found');
         return;
     }
     
-    // Highlight matches
-    content.innerHTML = content.innerHTML.replace(/<mark>/g, '').replace(/<\/mark>/g, '');
-    
-    const walker = document.createTreeWalker(
-        content,
+    searchInput.addEventListener('input', function() {
+        const searchText = this.value.toLowerCase().trim();
+        const contentContainers = document.querySelectorAll('.chapter-content');
+        
+        if (!contentContainers || contentContainers.length === 0) {
+            console.error('Content containers not found');
+            return;
+        }
+        
+        console.log('Search text:', searchText);
+        console.log('Found', contentContainers.length, 'chapter content containers');
+        
+        // First clear any existing highlights
+        const existingHighlights = document.querySelectorAll('mark');
+        existingHighlights.forEach(highlight => {
+            const parent = highlight.parentNode;
+            parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+            parent.normalize(); // Merge adjacent text nodes
+        });
+        
+        if (!searchText) return; // Exit if search is empty
+        
+        // Search all chapter content containers
+        contentContainers.forEach(container => {
+            findAndHighlightText(container, searchText);
+        });
+        
+        // Log search results
+        setTimeout(() => {
+            const highlights = document.querySelectorAll('mark');
+            console.log('Found', highlights.length, 'matches for', searchText);
+        }, 100);
+    });
+});
+
+function findAndHighlightText(container, searchText) {
+    // Get all text nodes in the container
+    const textNodes = [];
+    const walk = document.createTreeWalker(
+        container,
         NodeFilter.SHOW_TEXT,
-        null,
+        { acceptNode: node => {
+            // Skip script and style tags
+            const parent = node.parentNode;
+            if (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE') {
+                return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+        }},
         false
     );
     
-    const nodes = [];
     let node;
-    while (node = walker.nextNode()) {
-        nodes.push(node);
+    while (node = walk.nextNode()) {
+        // Only process nodes that contain the search text
+        if (node.textContent.toLowerCase().indexOf(searchText) > -1) {
+            textNodes.push(node);
+        }
     }
     
-    nodes.forEach(node => {
-        const text = node.textContent;
-        if (text.toLowerCase().includes(searchText)) {
-            const newText = text.replace(
-                new RegExp(`(${searchText})`, 'gi'),
-                '<mark>$1</mark>'
-            );
-            const span = document.createElement('span');
-            span.innerHTML = newText;
-            node.parentNode.replaceChild(span, node);
+    // Process each text node
+    textNodes.forEach(textNode => {
+        const text = textNode.textContent;
+        const parent = textNode.parentNode;
+        
+        // Create a temporary element
+        const temp = document.createElement('div');
+        
+        // Replace all occurrences of the search text with marked version
+        temp.innerHTML = text.replace(new RegExp(escapeRegExp(searchText), 'gi'), match => {
+            return `<mark>${match}</mark>`;
+        });
+        
+        // Create a fragment to hold the new nodes
+        const fragment = document.createDocumentFragment();
+        while (temp.firstChild) {
+            fragment.appendChild(temp.firstChild);
         }
+        
+        // Replace the original text node with the fragment
+        parent.replaceChild(fragment, textNode);
     });
-});
+}
+
+// Helper function to escape special characters in search text for regex
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 // Auto-scroll functionality for Mark as Complete buttons and automatic scrolling past completed sections
 document.addEventListener('DOMContentLoaded', function() {
@@ -603,7 +746,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Check if we're using the standardized quiz system
-    if (typeof window.initQuiz !== 'function') {
+    // Check if the quiz system is already loaded to prevent double initialization
+    const quizSystemLoaded = document.getElementById('quiz-system-script')?.getAttribute('data-loaded') === 'true';
+    
+    if (!quizSystemLoaded && typeof window.initQuiz !== 'function') {
         console.log('Using fallback quiz initialization');
         // Fallback quiz initialization for backward compatibility
         window.initQuiz = function(quizId, answers) {

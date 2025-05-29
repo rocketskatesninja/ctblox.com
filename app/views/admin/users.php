@@ -67,7 +67,7 @@ $title = 'Manage Users';
                     </div>
 
                     <div class="sm:col-span-6 border-t border-gray-200 pt-5">
-                        <h4 class="text-sm font-medium text-gray-900 mb-4">User Role</h4>
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Additional User Roles</h4>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-4">
@@ -149,7 +149,8 @@ $title = 'Manage Users';
                             </svg>
                         </div>
                         <input type="text" id="user-search" placeholder="Search users..." 
-                               class="pl-10 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 py-2">
+                               class="pl-10 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 py-2"
+                               style="padding-left: 40px;">
                     </div>
                     
                     <!-- Role Filter -->

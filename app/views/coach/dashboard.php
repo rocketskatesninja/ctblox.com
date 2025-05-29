@@ -47,13 +47,13 @@ $title = 'Coach Dashboard';
                                 Student
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Email
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Overall Progress
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Last Activity
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
                             </th>
                         </tr>
                     </thead>
@@ -77,20 +77,24 @@ $title = 'Coach Dashboard';
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                                            <span class="text-indigo-800 font-medium text-sm">
+                                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-700 flex items-center justify-center">
+                                            <span class="text-indigo-800 dark:text-indigo-100 font-medium text-sm">
                                                 <?= strtoupper(substr($student['username'], 0, 2)) ?>
                                             </span>
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900">
-                                                <?= $this->sanitize($student['username']) ?>
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                <?= $this->sanitize($student['email']) ?>
+                                                <a href="/coach/student/<?= $student['id'] ?>" class="text-indigo-600 hover:text-indigo-900">
+                                                    <?= $this->sanitize($student['username']) ?>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <a href="mailto:<?= $this->sanitize($student['email']) ?>" class="text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
+                                        <?= $this->sanitize($student['email']) ?>
+                                    </a>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
@@ -110,11 +114,7 @@ $title = 'Coach Dashboard';
                                         No activity yet
                                     <?php endif; ?>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="/coach/student/<?= $student['id'] ?>" class="text-indigo-600 hover:text-indigo-900">
-                                        View Details
-                                    </a>
-                                </td>
+
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

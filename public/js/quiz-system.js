@@ -28,11 +28,14 @@ function initQuiz(quizId, answers) {
         return;
     }
     
-    // Skip form handling if this quiz is handled by the modal system
-    if (form.getAttribute('data-modal-handled') === 'true') {
-        console.log(`Quiz ${quizId} is handled by the modal system, skipping initQuiz event handler`);
+    // Check if form already has a submit handler to prevent duplicate submissions
+    if (form.getAttribute('data-quiz-handler') === 'true') {
+        console.log(`Quiz ${quizId} already has a submit handler, skipping initialization`);
         return;
     }
+    
+    // Mark this form as having a submit handler
+    form.setAttribute('data-quiz-handler', 'true');
     
     // Handle form submission
     form.addEventListener('submit', function(e) {
@@ -95,7 +98,17 @@ function initQuiz(quizId, answers) {
         }
         
         // Update quiz state in database
-        updateQuizProgress(quizId, score, totalQuestions);
+        // First check if we're in a lesson context
+        const lessonId = document.querySelector('meta[name="lesson-id"]')?.getAttribute('content');
+        const chapterId = quizContainer.closest('[data-chapter-id]')?.getAttribute('data-chapter-id') || quizId;
+        
+        if (lessonId && chapterId) {
+            // We're in a lesson context, use the lesson's quiz submission endpoint
+            submitLessonQuiz(quizId, form, score, totalQuestions, percentage, chapterId);
+        } else {
+            // Otherwise use the generic progress update
+            updateQuizProgress(quizId, score, totalQuestions);
+        }
         
         // Show results
         resultsMessage.textContent = resultText;
@@ -171,5 +184,73 @@ function updateQuizProgress(quizId, score, totalQuestions) {
     })
     .catch(error => {
         console.error('Error updating quiz progress:', error);
+    });
+}
+
+/**
+ * Submit a lesson quiz to the server
+ * 
+ * @param {string} quizId - The ID of the quiz
+ * @param {HTMLFormElement} form - The quiz form element
+ * @param {number} score - The user's score
+ * @param {number} totalQuestions - The total number of questions
+ * @param {number} percentage - The percentage score
+ * @param {string} chapterId - The chapter ID
+ */
+function submitLessonQuiz(quizId, form, score, totalQuestions, percentage, chapterId) {
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const lessonId = document.querySelector('meta[name="lesson-id"]')?.getAttribute('content');
+    
+    if (!csrfToken || !lessonId) {
+        console.error('Missing CSRF token or lesson ID');
+        return;
+    }
+    
+    // Create form data
+    const formData = new FormData(form);
+    formData.append('csrf_token', csrfToken);
+    formData.append('lesson_id', lessonId);
+    formData.append('chapter_id', chapterId);
+    
+    // Add X-Requested-With header to ensure isAjax() returns true on the server
+    fetch('/lesson/quiz', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        // Check if the response is valid JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            // If not JSON, throw an error that will be caught below
+            throw new Error('Server returned an invalid response format');
+        }
+    })
+    .then(data => {
+        if (data.success) {
+            // Show a success message before reloading
+            const score = data.score || 0;
+            const passed = data.passed ? 'passed' : 'failed';
+            
+            if (data.passed) {
+                alert(`Congratulations! Your score: ${score}%. You have passed this quiz and the chapter has been marked as complete.`);
+            } else {
+                alert(`Quiz submitted. Your score: ${score}%. You need to score at least 80% to pass and unlock the next chapter.`);
+            }
+            
+            // Reload the page to update the UI
+            setTimeout(() => location.reload(), 500);
+        } else {
+            alert('Error saving quiz result: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Quiz submission error:', error);
+        alert('There was a problem submitting your quiz. Please try again.');
     });
 }
