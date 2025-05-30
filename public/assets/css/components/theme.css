@@ -1,0 +1,172 @@
+/* Theme Switching Styles for CT Blox Training Platform */
+
+/* Base variables for light and dark themes */
+:root {
+    /* Light theme variables (default) */
+    --bg-primary: #f9fafb;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f3f4f6;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --border-color: #e2e8f0;
+    --highlight-color: #4f46e5;
+    --highlight-hover: #4338ca;
+    --highlight-light: #e0e7ff;
+}
+
+/* Dark theme variables */
+.dark {
+    --bg-primary: #1a202c;
+    --bg-secondary: #2d3748;
+    --bg-tertiary: #4a5568;
+    --text-primary: #e2e8f0;
+    --text-secondary: #a0aec0;
+    --border-color: #4a5568;
+    --highlight-color: #6366f1;
+    --highlight-hover: #818cf8;
+    --highlight-light: #3730a3;
+}
+
+/* Hide page until theme is applied */
+html.visibility-hidden { 
+    visibility: hidden; 
+}
+
+/* Base theme styles */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Background colors */
+.bg-white, 
+.card, 
+nav, 
+header, 
+footer,
+.bg-gray-50,
+.bg-gray-100 { 
+    background-color: var(--bg-secondary); 
+}
+
+/* Fix for dark backgrounds in light mode */
+html.light .bg-gray-800,
+html.light .bg-gray-900,
+html.light .bg-slate-800,
+html.light .bg-slate-900,
+html.light body {
+    background-color: #f9fafb !important;
+}
+
+/* Specific fix for admin dashboard in light mode */
+html.light .admin-dashboard,
+html.light .dashboard-card {
+    background-color: #ffffff !important;
+}
+
+/* Text colors */
+.text-gray-900, 
+.text-gray-800, 
+.text-gray-700,
+h1, h2, h3, 
+h4, h5, h6 { 
+    color: var(--text-primary); 
+}
+
+/* Border colors */
+.border, 
+.border-gray-200, 
+.border-gray-300 { 
+    border-color: var(--border-color); 
+}
+
+/* Hover states */
+.hover\:bg-gray-50:hover,
+.hover\:bg-gray-100:hover,
+.hover\:bg-gray-200:hover,
+.dark\:hover\:bg-gray-700:hover { 
+    background-color: var(--bg-tertiary); 
+}
+
+/* Highlight colors */
+.bg-blue-600,
+.bg-indigo-600,
+.bg-indigo-700 { 
+    background-color: var(--highlight-color);
+    color: white;
+}
+
+.hover\:bg-blue-700:hover,
+.hover\:bg-indigo-700:hover { 
+    background-color: var(--highlight-hover);
+}
+
+.bg-blue-100,
+.bg-indigo-100 { 
+    background-color: var(--highlight-light);
+}
+
+.text-blue-600,
+.text-indigo-600,
+.text-purple-600 { 
+    color: var(--highlight-color);
+}
+
+/* Dark mode color scheme */
+.dark { 
+    color-scheme: dark; 
+}
+
+/* Light mode color scheme */
+.light { 
+    color-scheme: light; 
+}
+
+/* Explicit light mode styles */
+html.light body { 
+    background-color: #f9fafb !important; 
+    color: #1a202c !important; 
+}
+
+html.light .bg-gray-800, 
+html.light .bg-gray-900, 
+html.light .bg-slate-800, 
+html.light .bg-slate-900 { 
+    background-color: #ffffff !important; 
+}
+
+/* Fix hover states in light mode */
+html.light .hover\:bg-gray-50:hover,
+html.light .hover\:bg-gray-100:hover,
+html.light .hover\:bg-gray-200:hover { 
+    background-color: #f3f4f6 !important; 
+}
+
+html.light .dark\:hover\:bg-gray-700:hover { 
+    background-color: #f3f4f6 !important; 
+}
+
+/* Fix blue buttons and highlighting in light mode */
+html.light .bg-blue-600,
+html.light .bg-indigo-600,
+html.light .bg-indigo-700 { 
+    background-color: #4f46e5 !important; 
+    color: white !important; 
+}
+
+html.light .hover\:bg-blue-700:hover,
+html.light .hover\:bg-indigo-700:hover { 
+    background-color: #4338ca !important; 
+}
+
+html.light .bg-blue-100,
+html.light .bg-indigo-100 { 
+    background-color: #e0e7ff !important; 
+}
+
+html.light .text-blue-600,
+html.light .text-indigo-600,
+html.light .text-purple-600 { 
+    color: #4f46e5 !important; 
+}

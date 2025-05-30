@@ -24,32 +24,80 @@
                 <h4 class="text-base font-medium text-gray-900 dark:text-white mb-3">Progress Overview</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Chapter Progress -->
-                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600">
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4">
                         <div class="flex items-center justify-between mb-2">
-                            <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300">Chapter Progress</h5>
-                            <span class="text-sm font-semibold text-indigo-600 dark:text-indigo-400"><?= $stats['chapter_completion_percentage'] ?>%</span>
+                            <h5 class="text-sm font-medium text-gray-600">Chapter Progress</h5>
+                            <?php 
+                            // Calculate chapter progress directly in the view
+                            $completed_chapters = 0;
+                            $total_chapters = 0;
+                            
+                            // Query to get chapter progress
+                            $chapterStmt = $this->pdo->prepare("
+                                SELECT 
+                                    COUNT(DISTINCT c.chapter_id) as total_chapters,
+                                    COUNT(DISTINCT CASE WHEN p.completed = 1 THEN p.chapter_id END) as completed_chapters
+                                FROM chapters c
+                                JOIN lessons l ON c.lesson_id = l.id
+                                JOIN lesson_assignments la ON l.id = la.lesson_id AND la.user_id = ?
+                                LEFT JOIN progress p ON c.lesson_id = p.lesson_id AND c.chapter_id = p.chapter_id AND p.user_id = ?
+                            ");
+                            $chapterStmt->execute([$_SESSION['user_id'], $_SESSION['user_id']]);
+                            $chapterData = $chapterStmt->fetch();
+                            
+                            $completed_chapters = $chapterData['completed_chapters'];
+                            $total_chapters = $chapterData['total_chapters'];
+                            $chapter_percentage = ($total_chapters > 0) ? round(($completed_chapters / $total_chapters) * 100) : 0;
+                            ?>
+                            <span class="text-sm font-medium text-indigo-600"><?= $chapter_percentage ?>%</span>
                         </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 mb-2">
-                            <div class="bg-indigo-600 dark:bg-indigo-400 h-2.5 rounded-full" style="width: <?= $stats['chapter_completion_percentage'] ?>%"></div>
+                        <div class="w-full bg-gray-100 rounded-full h-2 mb-2">
+                            <div class="bg-indigo-500 h-2 rounded-full" style="width: <?= $chapter_percentage ?>%"></div>
                         </div>
-                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                            <span><?= $stats['total_completed_chapters'] ?> completed</span>
-                            <span><?= $stats['total_assigned_chapters'] ?> total</span>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span><?= $completed_chapters ?> completed</span>
+                            <span><?= $total_chapters ?> total</span>
                         </div>
                     </div>
                     
                     <!-- Lesson Progress -->
-                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600">
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4">
                         <div class="flex items-center justify-between mb-2">
-                            <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300">Lesson Progress</h5>
-                            <span class="text-sm font-semibold text-green-600 dark:text-green-400"><?= $stats['lesson_completion_percentage'] ?>%</span>
+                            <h5 class="text-sm font-medium text-gray-600">Lesson Progress</h5>
+                            <?php 
+                            // Calculate lesson progress directly in the view
+                            $completed_lessons = 0;
+                            $total_lessons = 0;
+                            
+                            // Query to get lesson progress
+                            $lessonStmt = $this->pdo->prepare("
+                                SELECT 
+                                    COUNT(DISTINCT l.id) as total_lessons,
+                                    SUM(CASE WHEN (
+                                        SELECT COUNT(*) FROM chapters c WHERE c.lesson_id = l.id
+                                    ) = (
+                                        SELECT COUNT(*) FROM progress p 
+                                        WHERE p.lesson_id = l.id AND p.user_id = ? AND p.completed = 1
+                                    ) THEN 1 ELSE 0 END) as completed_lessons
+                                FROM lessons l
+                                JOIN lesson_assignments la ON l.id = la.lesson_id
+                                WHERE la.user_id = ?
+                            ");
+                            $lessonStmt->execute([$_SESSION['user_id'], $_SESSION['user_id']]);
+                            $lessonData = $lessonStmt->fetch();
+                            
+                            $completed_lessons = $lessonData['completed_lessons'];
+                            $total_lessons = $lessonData['total_lessons'];
+                            $lesson_percentage = ($total_lessons > 0) ? round(($completed_lessons / $total_lessons) * 100) : 0;
+                            ?>
+                            <span class="text-sm font-medium text-green-600"><?= $lesson_percentage ?>%</span>
                         </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 mb-2">
-                            <div class="bg-green-600 dark:bg-green-400 h-2.5 rounded-full" style="width: <?= $stats['lesson_completion_percentage'] ?>%"></div>
+                        <div class="w-full bg-gray-100 rounded-full h-2 mb-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: <?= $lesson_percentage ?>%"></div>
                         </div>
-                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                            <span><?= $stats['total_completed_lessons'] ?> completed</span>
-                            <span><?= $stats['total_assigned_lessons'] ?> total</span>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span><?= $completed_lessons ?> completed</span>
+                            <span><?= $total_lessons ?> total</span>
                         </div>
                     </div>
                 </div>
@@ -58,62 +106,75 @@
             <!-- Statistics Grid -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <!-- Chapters Completed -->
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                <div class="bg-white rounded-lg p-4">
                     <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-md p-2">
-                            <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-300" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="flex-shrink-0 bg-indigo-100 rounded-md p-2">
+                            <svg class="h-6 w-6 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
                             </svg>
                         </div>
                         <div class="ml-4">
-                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">Chapters Completed</h4>
-                            <p class="mt-1 text-2xl font-semibold text-indigo-600 dark:text-indigo-400"><?= $stats['total_completed_chapters'] ?></p>
+                            <h4 class="text-sm font-medium text-gray-600">Chapters Completed</h4>
+                            <p class="mt-1 text-2xl font-semibold text-indigo-500"><?= $completed_chapters ?></p>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Lessons Completed -->
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                <div class="bg-white rounded-lg p-4">
                     <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-green-100 dark:bg-green-900 rounded-md p-2">
-                            <svg class="h-6 w-6 text-green-600 dark:text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="flex-shrink-0 bg-green-100 rounded-md p-2">
+                            <svg class="h-6 w-6 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                             </svg>
                         </div>
                         <div class="ml-4">
-                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">Lessons Completed</h4>
-                            <p class="mt-1 text-2xl font-semibold text-green-600 dark:text-green-400"><?= $stats['total_completed_lessons'] ?></p>
+                            <h4 class="text-sm font-medium text-gray-600">Lessons Completed</h4>
+                            <p class="mt-1 text-2xl font-semibold text-green-500"><?= $completed_lessons ?></p>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Quizzes Taken -->
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                <div class="bg-white rounded-lg p-4">
                     <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900 rounded-md p-2">
-                            <svg class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="flex-shrink-0 bg-blue-100 rounded-md p-2">
+                            <svg class="h-6 w-6 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                                 <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
                             </svg>
                         </div>
                         <div class="ml-4">
-                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">Quizzes Taken</h4>
-                            <p class="mt-1 text-2xl font-semibold text-blue-600 dark:text-blue-400"><?= $stats['total_quizzes_taken'] ?></p>
+                            <h4 class="text-sm font-medium text-gray-600">Quizzes Taken</h4>
+                            <?php
+                            // Get quizzes taken directly
+                            $quizStmt = $this->pdo->prepare("SELECT COUNT(*) FROM quiz_results WHERE user_id = ?");
+                            $quizStmt->execute([$_SESSION['user_id']]);
+                            $quizzes_taken = $quizStmt->fetchColumn();
+                            ?>
+                            <p class="mt-1 text-2xl font-semibold text-blue-500"><?= $quizzes_taken ?></p>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Average Quiz Score -->
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                <div class="bg-white rounded-lg p-4">
                     <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900 rounded-md p-2">
-                            <svg class="h-6 w-6 text-purple-600 dark:text-purple-300" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="flex-shrink-0 bg-purple-100 rounded-md p-2">
+                            <svg class="h-6 w-6 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                             </svg>
                         </div>
                         <div class="ml-4">
-                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">Average Quiz Score</h4>
-                            <p class="mt-1 text-2xl font-semibold text-purple-600 dark:text-purple-400"><?= $stats['average_quiz_score'] ?>%</p>
+                            <h4 class="text-sm font-medium text-gray-600">Average Quiz Score</h4>
+                            <?php
+                            // Get average quiz score directly
+                            $scoreStmt = $this->pdo->prepare("SELECT AVG(score) FROM quiz_results WHERE user_id = ?");
+                            $scoreStmt->execute([$_SESSION['user_id']]);
+                            $avg_score = $scoreStmt->fetchColumn();
+                            $avg_score = $avg_score ? round($avg_score) : 0;
+                            ?>
+                            <p class="mt-1 text-2xl font-semibold text-purple-500"><?= $avg_score ?>%</p>
                         </div>
                     </div>
                 </div>

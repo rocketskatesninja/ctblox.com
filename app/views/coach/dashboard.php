@@ -124,75 +124,183 @@ $title = 'Coach Dashboard';
     </div>
 
     <?php if (!empty($students)): ?>
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white flex items-center">
                 <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
                 </svg>
                 Lesson Progress
             </h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                Overview of student progress across all lessons
+            </p>
         </div>
-        <div class="border-t border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                <?php foreach ($allLessons as $lesson): ?>
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-                        <h4 class="text-md font-medium text-gray-900 mb-2"><?= $this->sanitize($lesson['title']) ?></h4>
-                        
-                        <?php
-                        // Count students who have started or completed this lesson
-                        $studentsStarted = 0;
-                        $studentsCompleted = 0;
-                        
-                        foreach ($students as $student) {
-                            if (isset($student['progress'][$lesson['title']])) {
-                                $studentsStarted++;
-                                
-                                if ($student['progress'][$lesson['title']]['completion_percentage'] == 100) {
-                                    $studentsCompleted++;
+        <div class="border-t border-gray-200 dark:border-gray-700">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Lesson
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Progress
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Students
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Details
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <?php foreach ($allLessons as $lesson): ?>
+                            <?php
+                            // Count students who have started or completed this lesson
+                            $studentsStarted = 0;
+                            $studentsCompleted = 0;
+                            $studentsInProgress = 0;
+                            
+                            // Get total chapters for this lesson
+                            $stmt = $pdo->prepare("SELECT COUNT(DISTINCT chapter_id) FROM chapters WHERE lesson_id = ?");
+                            $stmt->execute([$lesson['id']]);
+                            $totalChapters = $stmt->fetchColumn();
+                            
+                            foreach ($students as $student) {
+                                if (isset($student['progress'][$lesson['title']])) {
+                                    $studentsStarted++;
+                                    
+                                    // Count completed chapters for this student
+                                    $stmt = $pdo->prepare("SELECT COUNT(DISTINCT chapter_id) FROM progress WHERE user_id = ? AND lesson_id = ? AND completed = 1");
+                                    $stmt->execute([$student['id'], $lesson['id']]);
+                                    $completedChapters = $stmt->fetchColumn();
+                                    
+                                    // Store chapter progress in student's progress array for later use
+                                    $student['progress'][$lesson['title']]['completed_chapters'] = $completedChapters;
+                                    $student['progress'][$lesson['title']]['total_chapters'] = $totalChapters;
+                                    
+                                    if ($completedChapters == $totalChapters) {
+                                        $studentsCompleted++;
+                                    } else if ($completedChapters > 0) {
+                                        $studentsInProgress++;
+                                    }
                                 }
                             }
-                        }
-                        ?>
-                        
-                        <div class="flex justify-between text-sm text-gray-500 mb-1">
-                            <span>Started by <?= $studentsStarted ?> of <?= count($students) ?> students</span>
-                            <span><?= $studentsCompleted ?> completed</span>
-                        </div>
-                        
-                        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                            <div class="bg-indigo-500 h-2.5 rounded-full" style="width: <?= count($students) > 0 ? round(($studentsStarted / count($students)) * 100) : 0 ?>%"></div>
-                        </div>
-                        
-                        <?php if ($studentsStarted > 0): ?>
-                            <div class="space-y-2">
-                                <?php foreach ($students as $student): ?>
-                                    <?php if (isset($student['progress'][$lesson['title']])): ?>
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center">
-                                                <div class="flex-shrink-0 h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-xs">
-                                                    <?= strtoupper(substr($student['username'], 0, 1)) ?>
-                                                </div>
-                                                <span class="ml-2 text-xs text-gray-600"><?= $this->sanitize($student['username']) ?></span>
-                                            </div>
-                                            <div class="flex items-center">
-                                                <div class="w-20 bg-gray-200 rounded-full h-1.5 mr-2">
-                                                    <div class="bg-<?= $student['progress'][$lesson['title']]['completion_percentage'] >= 80 ? 'green' : ($student['progress'][$lesson['title']]['completion_percentage'] >= 40 ? 'yellow' : 'red') ?>-500 h-1.5 rounded-full" style="width: <?= $student['progress'][$lesson['title']]['completion_percentage'] ?>%"></div>
-                                                </div>
-                                                <span class="text-xs text-gray-500"><?= $student['progress'][$lesson['title']]['completion_percentage'] ?>%</span>
-                                            </div>
+                            
+                            // Calculate percentage of students who completed the entire lesson
+                            $completionPercentage = count($students) > 0 ? round(($studentsCompleted / count($students)) * 100) : 0;
+                            ?>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <?= $this->sanitize($lesson['title']) ?>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-full max-w-[150px] bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 mr-2">
+                                            <div class="bg-<?= $completionPercentage >= 80 ? 'green' : ($completionPercentage >= 40 ? 'yellow' : 'red') ?>-500 h-2.5 rounded-full" style="width: <?= $completionPercentage ?>%"></div>
+                                        </div>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400"><?= $studentsCompleted ?>/<?= count($students) ?></span>
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Students completed lesson
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex space-x-2">
+                                        <div class="px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100">
+                                            <?= $studentsCompleted ?> completed
+                                        </div>
+                                        <div class="px-2 py-1 text-xs rounded-full bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100">
+                                            <?= $studentsInProgress ?> in progress
+                                        </div>
+                                        <div class="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
+                                            <?= count($students) - $studentsStarted ?> not started
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    <button type="button" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                                            onclick="toggleStudentDetails('lesson-<?= md5($lesson['title']) ?>')">
+                                        Show Students
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr id="lesson-<?= md5($lesson['title']) ?>" class="hidden bg-gray-50 dark:bg-gray-900">
+                                <td colspan="4" class="px-6 py-4">
+                                    <?php if ($studentsStarted > 0): ?>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            <?php foreach ($students as $student): ?>
+                                                <?php if (isset($student['progress'][$lesson['title']])): ?>
+                                                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm space-y-3">
+                                                        <div class="flex items-center justify-between">
+                                                            <div class="flex items-center space-x-3">
+                                                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-700 flex items-center justify-center">
+                                                                    <span class="text-indigo-800 dark:text-indigo-100 font-medium text-sm">
+                                                                        <?= strtoupper(substr($student['username'], 0, 2)) ?>
+                                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <a href="/coach/student/<?= $student['id'] ?>" class="text-sm font-medium text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                                                        <?= $this->sanitize($student['username']) ?>
+                                                                    </a>
+                                                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                                        Last active: <?= isset($student['progress'][$lesson['title']]['last_activity']) ? date('M j, Y', strtotime($student['progress'][$lesson['title']]['last_activity'])) : 'Never' ?>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-right">
+                                                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    <?= $student['progress'][$lesson['title']]['completed_chapters'] ?>/<?= $student['progress'][$lesson['title']]['total_chapters'] ?>
+                                                                </div>
+                                                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                                    chapters completed
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                                            <?php
+                                                            $progressPercentage = ($student['progress'][$lesson['title']]['completed_chapters'] / $student['progress'][$lesson['title']]['total_chapters']) * 100;
+                                                            $progressColorClass = 'bg-indigo-600 dark:bg-indigo-500';
+                                                            if ($progressPercentage < 30) {
+                                                                $progressColorClass = 'bg-red-500 dark:bg-red-400';
+                                                            } elseif ($progressPercentage < 70) {
+                                                                $progressColorClass = 'bg-yellow-500 dark:bg-yellow-400';
+                                                            } elseif ($progressPercentage === 100) {
+                                                                $progressColorClass = 'bg-green-500 dark:bg-green-400';
+                                                            }
+                                                            ?>
+                                                            <div class="<?= $progressColorClass ?> h-2 rounded-full transition-all duration-300" style="width: <?= $progressPercentage ?>%"></div>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="text-center py-4">
+                                            <p class="text-sm text-gray-500 dark:text-gray-400 italic">No students have started this lesson yet</p>
                                         </div>
                                     <?php endif; ?>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <p class="text-sm text-gray-500 italic">No students have started this lesson yet</p>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+    
+    <script>
+    function toggleStudentDetails(id) {
+        const detailsRow = document.getElementById(id);
+        if (detailsRow) {
+            detailsRow.classList.toggle('hidden');
+        }
+    }
+    </script>
     <?php endif; ?>
 </div>
 

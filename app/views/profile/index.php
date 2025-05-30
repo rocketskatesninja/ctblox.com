@@ -28,26 +28,16 @@ $title = 'Your Profile';
                         <div class="grid grid-cols-6 gap-6">
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
-                                        </svg>
-                                    </div>
-                                    <input type="text" name="username" id="username" value="<?= htmlspecialchars($user['username']) ?>" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md bg-gray-100 h-10 px-3" disabled>
+                                <div class="mt-1">
+                                    <input type="text" name="username" id="username" value="<?= htmlspecialchars($user['username']) ?>" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md bg-gray-100 h-10 px-3" disabled>
                                 </div>
                                 <p class="mt-1 text-xs text-gray-500">Username cannot be changed</p>
                             </div>
                             
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <input type="text" name="name" id="name" value="<?= htmlspecialchars($user['name'] ?? '') ?>" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 px-3">
+                                <div class="mt-1">
+                                    <input type="text" name="name" id="name" value="<?= htmlspecialchars($user['name'] ?? '') ?>" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 px-3">
                                 </div>
                                 <?php if (isset($_SESSION['form_errors']['name'])): ?>
                                     <p class="mt-1 text-sm text-red-600"><?= $_SESSION['form_errors']['name'] ?></p>
@@ -56,14 +46,8 @@ $title = 'Your Profile';
                             
                             <div class="col-span-6">
                                 <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                                        </svg>
-                                    </div>
-                                    <input type="email" name="email" id="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 px-3">
+                                <div class="mt-1">
+                                    <input type="email" name="email" id="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 px-3">
                                 </div>
                                 <?php if (isset($_SESSION['form_errors']['email'])): ?>
                                     <p class="mt-1 text-sm text-red-600"><?= $_SESSION['form_errors']['email'] ?></p>
@@ -111,13 +95,8 @@ $title = 'Your Profile';
                         <div class="grid grid-cols-6 gap-6">
                             <div class="col-span-6 sm:col-span-4 sm:col-start-2">
                                 <label for="current_password" class="block text-sm font-medium text-gray-700">Current Password</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <input type="password" name="current_password" id="current_password" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 px-3">
+                                <div class="mt-1">
+                                    <input type="password" name="current_password" id="current_password" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 px-3">
                                 </div>
                                 <?php if (isset($_SESSION['password_errors']['current_password'])): ?>
                                     <p class="mt-1 text-sm text-red-600"><?= $_SESSION['password_errors']['current_password'] ?></p>
@@ -126,13 +105,8 @@ $title = 'Your Profile';
                             
                             <div class="col-span-6 sm:col-span-4 sm:col-start-2">
                                 <label for="new_password" class="block text-sm font-medium text-gray-700">New Password</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v-1l1-1 1-1-.257-.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <input type="password" name="new_password" id="new_password" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 px-3">
+                                <div class="mt-1">
+                                    <input type="password" name="new_password" id="new_password" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 px-3">
                                 </div>
                                 <?php if (isset($_SESSION['password_errors']['new_password'])): ?>
                                     <p class="mt-1 text-sm text-red-600"><?= $_SESSION['password_errors']['new_password'] ?></p>
@@ -141,13 +115,8 @@ $title = 'Your Profile';
                             
                             <div class="col-span-6 sm:col-span-4 sm:col-start-2">
                                 <label for="confirm_password" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <input type="password" name="confirm_password" id="confirm_password" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 px-3">
+                                <div class="mt-1">
+                                    <input type="password" name="confirm_password" id="confirm_password" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 px-3">
                                 </div>
                                 <?php if (isset($_SESSION['password_errors']['confirm_password'])): ?>
                                     <p class="mt-1 text-sm text-red-600"><?= $_SESSION['password_errors']['confirm_password'] ?></p>

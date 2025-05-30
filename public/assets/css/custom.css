@@ -1,42 +1,9 @@
 /* Custom styles for CT Blox Training Platform */
 
-/* Increase font size for all form inputs and select elements */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="search"],
-input[type="tel"],
-input[type="url"],
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"],
-select,
-textarea {
-    font-size: 1rem !important; /* Override Tailwind's text-sm */
-    height: 2.5rem; /* Equivalent to h-10 */
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    border-color: #9ca3af !important; /* Darker border (gray-400) */
-    border-width: 1px;
-}
+/* This file has been refactored. Styles have been moved to structured CSS files:
+ * - /assets/css/main.css (main stylesheet)
+ * - /assets/css/components/theme.css (theme switching)
+ * - /assets/css/components/forms.css (form elements)
+ */
 
-/* Focus state styling */
-input:focus,
-select:focus,
-textarea:focus {
-    border-color: #6366f1 !important; /* Indigo-500 */
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important; /* Indigo-500 with opacity */
-}
-
-/* Ensure textareas can be taller */
-textarea {
-    height: auto;
-}
-
-/* Style for dropdowns to ensure consistent appearance */
-select {
-    background-position: right 0.5rem center;
-    padding-right: 2rem;
-}
+/* Add any custom overrides below this line */

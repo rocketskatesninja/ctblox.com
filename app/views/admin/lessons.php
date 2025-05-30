@@ -28,7 +28,10 @@ $title = 'Manage Lessons';
     <?php endif; ?>
     <div class="bg-white shadow sm:rounded-lg" x-data="{ formOpen: false }">
         <div class="px-4 py-5 sm:p-6 flex justify-between items-center cursor-pointer" @click="formOpen = !formOpen">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
+                <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H9V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L7 9.414V13H5.5z" />
+                </svg>
                 Upload New Lesson
             </h3>
             <button type="button" class="text-gray-400 hover:text-gray-500 focus:outline-none">
@@ -110,7 +113,10 @@ $title = 'Manage Lessons';
 
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
+                <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                </svg>
                 Available Lessons
             </h3>
             <form action="/admin/lessons" method="POST" class="inline-block">

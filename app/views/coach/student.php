@@ -35,7 +35,19 @@ $title = 'Student Progress';
                 <p class="mt-1 max-w-2xl text-sm text-gray-500">Personal details and progress overview.</p>
             </div>
             <div class="flex items-center">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <?= $overallProgress['chapter_completion_percentage'] > 75 ? 'bg-green-100 text-green-800' : ($overallProgress['chapter_completion_percentage'] > 25 ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') ?>">
+                <?php
+                $badgeColorClass = 'bg-gray-100 text-gray-800';
+                if ($overallProgress['chapter_completion_percentage'] === 100) {
+                    $badgeColorClass = 'bg-green-100 text-green-800';
+                } elseif ($overallProgress['chapter_completion_percentage'] >= 70) {
+                    $badgeColorClass = 'bg-indigo-100 text-indigo-800';
+                } elseif ($overallProgress['chapter_completion_percentage'] >= 30) {
+                    $badgeColorClass = 'bg-yellow-100 text-yellow-800';
+                } elseif ($overallProgress['chapter_completion_percentage'] > 0) {
+                    $badgeColorClass = 'bg-red-100 text-red-800';
+                }
+                ?>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <?= $badgeColorClass ?>">
                     <?= $overallProgress['chapter_completion_percentage'] ?>% Complete
                 </span>
             </div>
@@ -80,7 +92,17 @@ $title = 'Student Progress';
                             <dd class="mt-1">
                                 <div class="flex items-center">
                                     <div class="w-full bg-gray-200 rounded-full h-2.5 mr-2">
-                                        <div class="bg-<?= $overallProgress['chapter_completion_percentage'] > 75 ? 'green' : ($overallProgress['chapter_completion_percentage'] > 25 ? 'yellow' : 'gray') ?>-500 h-2.5 rounded-full" style="width: <?= $overallProgress['chapter_completion_percentage'] ?>%"></div>
+                                        <?php
+                                        $progressColorClass = 'bg-indigo-600 dark:bg-indigo-500';
+                                        if ($overallProgress['chapter_completion_percentage'] < 30) {
+                                            $progressColorClass = 'bg-red-500 dark:bg-red-400';
+                                        } elseif ($overallProgress['chapter_completion_percentage'] < 70) {
+                                            $progressColorClass = 'bg-yellow-500 dark:bg-yellow-400';
+                                        } elseif ($overallProgress['chapter_completion_percentage'] === 100) {
+                                            $progressColorClass = 'bg-green-500 dark:bg-green-400';
+                                        }
+                                        ?>
+                                        <div class="<?= $progressColorClass ?> h-2.5 rounded-full transition-all duration-300" style="width: <?= $overallProgress['chapter_completion_percentage'] ?>%"></div>
                                     </div>
                                     <span class="text-sm text-gray-900"><?= $overallProgress['chapter_completion_percentage'] ?>%</span>
                                 </div>
@@ -137,14 +159,14 @@ $title = 'Student Progress';
 
     <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
         <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-            <div class="flex items-center">
-                <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                </svg>
-                <div>
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Assigned Lessons & Progress</h3>
-                    <p class="mt-1 max-w-2xl text-sm text-gray-500">Manage lessons and track chapter-by-chapter progress</p>
-                </div>
+            <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white flex items-center">
+                    <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                    </svg>
+                    Assigned Lessons & Progress
+                </h3>
+                <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">Manage lessons and track chapter-by-chapter progress</p>
             </div>
             <button type="button" onclick="document.getElementById('assignLessonModal').classList.remove('hidden')" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -217,10 +239,22 @@ $title = 'Student Progress';
                             }
                         }
                         
-                        // Determine status color
-                        $statusColor = 'gray';
-                        if ($completionPercentage > 0) {
-                            $statusColor = $completionPercentage == 100 ? 'green' : 'yellow';
+                        // Determine status color based on completion percentage
+                        if ($completionPercentage === 100) {
+                            $statusColor = 'green';
+                            $progressColorClass = 'bg-green-500 dark:bg-green-400';
+                        } elseif ($completionPercentage >= 70) {
+                            $statusColor = 'indigo';
+                            $progressColorClass = 'bg-indigo-600 dark:bg-indigo-500';
+                        } elseif ($completionPercentage >= 30) {
+                            $statusColor = 'yellow';
+                            $progressColorClass = 'bg-yellow-500 dark:bg-yellow-400';
+                        } elseif ($completionPercentage > 0) {
+                            $statusColor = 'red';
+                            $progressColorClass = 'bg-red-500 dark:bg-red-400';
+                        } else {
+                            $statusColor = 'gray';
+                            $progressColorClass = 'bg-gray-500 dark:bg-gray-400';
                         }
                         ?>
                         
@@ -279,8 +313,8 @@ $title = 'Student Progress';
                                             <?= $completionPercentage ?>% Complete
                                         </span>
                                     </div>
-                                    <div class="w-full sm:w-32 bg-gray-200 rounded-full h-2">
-                                        <div class="bg-<?= $statusColor ?>-500 h-2 rounded-full" style="width: <?= $completionPercentage ?>%"></div>
+                                    <div class="w-full sm:w-32 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                        <div class="<?= $progressColorClass ?> h-2 rounded-full transition-all duration-300" style="width: <?= $completionPercentage ?>%"></div>
                                     </div>
                                 </div>
                             </div>
@@ -297,41 +331,41 @@ $title = 'Student Progress';
                                     
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                         <?php foreach ($data['chapters'] as $index => $chapter): ?>
-                                            <div class="bg-white rounded-md shadow-sm border <?= $chapter['completed'] ? 'border-green-200' : 'border-gray-200' ?> overflow-hidden">
+                                            <div class="bg-white rounded-md shadow-sm border <?= $chapter['completed'] ? 'border-green-200' : 'border-gray-200' ?> overflow-hidden h-full flex flex-col">
                                                 <div class="px-4 py-3 flex justify-between items-center <?= $chapter['completed'] ? 'bg-green-50' : 'bg-white' ?>">
                                                     <div class="flex items-center">
-                                                        <div class="flex-shrink-0 h-6 w-6 rounded-full flex items-center justify-center <?= $chapter['completed'] ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500' ?>">
+                                                        <div class="flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center <?= $chapter['completed'] ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500' ?>">
                                                             <?= $index + 1 ?>
                                                         </div>
                                                         <div class="ml-3">
-                                                            <p class="text-sm font-medium text-gray-900"><?= $this->sanitize($chapter['chapter_id']) ?></p>
+                                                            <p class="text-sm font-medium text-gray-900"><?= $this->sanitize(ucwords(str_replace('_', ' ', $chapter['chapter_id']))) ?></p>
                                                         </div>
                                                     </div>
-                                                    <?php if ($chapter['completed']): ?>
-                                                        <div class="flex-shrink-0">
+                                                    <div class="flex-shrink-0">
+                                                        <?php if ($chapter['completed']): ?>
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                                                                 <svg class="mr-1 h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                                                 </svg>
-                                                                Complete
+                                                                Completed
                                                             </span>
-                                                        </div>
-                                                    <?php else: ?>
-                                                        <div class="flex-shrink-0">
+                                                        <?php else: ?>
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                                                <svg class="mr-1 h-3 w-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                                <svg class="mr-1 h-3 w-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
                                                                 </svg>
                                                                 Pending
                                                             </span>
-                                                        </div>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                                <div class="px-4 py-2 <?= $chapter['completed'] ? 'bg-green-50 border-t border-green-100 text-xs text-green-700' : 'bg-gray-50 border-t border-gray-100 text-xs text-gray-500' ?> mt-auto">
+                                                    <?php if ($chapter['completed']): ?>
+                                                        Completed on <?= date('M j, Y', strtotime($chapter['completed_at'])) ?>
+                                                    <?php else: ?>
+                                                        Not yet completed
                                                     <?php endif; ?>
                                                 </div>
-                                                <?php if ($chapter['completed'] && $chapter['completed_at']): ?>
-                                                    <div class="border-t border-gray-200 px-4 py-2 text-xs text-gray-500">
-                                                        Completed on <?= date('M j, Y', strtotime($chapter['completed_at'])) ?>
-                                                    </div>
-                                                <?php endif; ?>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../models/Stats.php';
+
 class DashboardController extends Controller {
     public function __construct() {
         parent::__construct();
@@ -65,61 +67,9 @@ class DashboardController extends Controller {
             $lesson['custom_summary'] = $summary;
         }
         
-        // Calculate overall statistics for the student dashboard
-        // Fixed query to correctly calculate total assigned chapters
-        $statsStmt = $this->pdo->prepare("
-            SELECT 
-                SUM(CASE WHEN p.completed = 1 THEN 1 ELSE 0 END) as total_completed_chapters,
-                COUNT(DISTINCT CASE WHEN lesson_completion.is_complete = 1 THEN lesson_completion.lesson_id END) as total_completed_lessons,
-                COUNT(DISTINCT lesson_completion.lesson_id) as total_assigned_lessons,
-                (SELECT COUNT(DISTINCT c.id) 
-                 FROM chapters c
-                 JOIN lessons l ON c.lesson_id = l.id
-                 JOIN lesson_assignments la ON l.id = la.lesson_id
-                 WHERE la.user_id = ? AND l.active = 1) as total_assigned_chapters,
-                AVG(CASE WHEN qr.score IS NOT NULL THEN qr.score ELSE NULL END) as average_quiz_score,
-                COUNT(DISTINCT qr.id) as total_quizzes_taken,
-                MAX(p.completed_at) as last_activity_date
-            FROM (
-                SELECT 
-                    l.id as lesson_id,
-                    COUNT(DISTINCT c.chapter_id) as total_chapters,
-                    COUNT(DISTINCT CASE WHEN p.completed = 1 THEN p.chapter_id END) as completed_chapters,
-                    CASE WHEN COUNT(DISTINCT c.chapter_id) > 0 AND 
-                              COUNT(DISTINCT c.chapter_id) = COUNT(DISTINCT CASE WHEN p.completed = 1 THEN p.chapter_id END) 
-                         THEN 1 ELSE 0 END as is_complete
-                FROM lessons l
-                JOIN lesson_assignments la ON l.id = la.lesson_id AND la.user_id = ?
-                LEFT JOIN chapters c ON l.id = c.lesson_id
-                LEFT JOIN progress p ON l.id = p.lesson_id AND p.user_id = ? AND p.chapter_id = c.chapter_id
-                WHERE l.active = 1
-                GROUP BY l.id
-            ) as lesson_completion
-            LEFT JOIN lessons l ON lesson_completion.lesson_id = l.id
-            LEFT JOIN chapters c ON l.id = c.lesson_id
-            LEFT JOIN progress p ON l.id = p.lesson_id AND p.user_id = ? AND p.chapter_id = c.chapter_id
-            LEFT JOIN quiz_results qr ON l.id = qr.lesson_id AND qr.user_id = ? AND qr.chapter_id = c.chapter_id
-        ");
-        $statsStmt->execute([$_SESSION['user_id'], $_SESSION['user_id'], $_SESSION['user_id'], $_SESSION['user_id'], $_SESSION['user_id']]);
-        $stats = $statsStmt->fetch();
-        
-        // Add overall statistics to the view data
-        $stats['total_completed_chapters'] = $stats['total_completed_chapters'] ?? 0;
-        $stats['total_completed_lessons'] = $stats['total_completed_lessons'] ?? 0;
-        $stats['total_assigned_lessons'] = $stats['total_assigned_lessons'] ?? 0;
-        $stats['total_assigned_chapters'] = $stats['total_assigned_chapters'] ?? 0;
-        $stats['average_quiz_score'] = $stats['average_quiz_score'] ? round($stats['average_quiz_score']) : 0;
-        $stats['total_quizzes_taken'] = $stats['total_quizzes_taken'] ?? 0;
-        $stats['last_activity_date'] = $stats['last_activity_date'] ?? null;
-        
-        // Calculate completion percentages
-        $stats['chapter_completion_percentage'] = $stats['total_assigned_chapters'] > 0 
-            ? round(($stats['total_completed_chapters'] / $stats['total_assigned_chapters']) * 100) 
-            : 0;
-            
-        $stats['lesson_completion_percentage'] = $stats['total_assigned_lessons'] > 0 
-            ? round(($stats['total_completed_lessons'] / $stats['total_assigned_lessons']) * 100) 
-            : 0;
+        // Get user dashboard statistics using the Stats model
+        $statsModel = Stats::getInstance();
+        $stats = $statsModel->getUserDashboardStats($_SESSION['user_id']);
         
         return $this->view('dashboard/index', [
             'lessons' => $lessons,

@@ -7,7 +7,10 @@ $title = 'Manage Users';
     <div class="bg-white shadow sm:rounded-lg overflow-hidden" x-data="{ formOpen: false }">
         <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center cursor-pointer" @click="formOpen = !formOpen">
             <div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                    </svg>
                     Create New User
                 </h3>
                 <p class="mt-1 text-sm text-gray-500">Add a new user to the CTBlox Training Platform</p>
@@ -137,7 +140,10 @@ $title = 'Manage Users';
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4 md:mb-0">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4 md:mb-0 flex items-center">
+                    <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
+                    </svg>
                     User Management
                 </h3>
                 <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">

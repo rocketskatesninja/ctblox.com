@@ -237,7 +237,7 @@ $title = 'System Settings';
                         <label for="certificate_template" class="block text-sm font-medium text-gray-700">Certificate Template</label>
                         <div class="mt-1">
                             <textarea id="certificate_template" name="certificate_template" rows="10"
-                                      class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-base border-gray-300 rounded-md"><?= isset($settings['certificate_template']) ? htmlspecialchars($settings['certificate_template']) : '' ?></textarea>
+                                      class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-base border-gray-300 rounded-md px-3 py-2"><?= isset($settings['certificate_template']) ? htmlspecialchars($settings['certificate_template']) : '' ?></textarea>
                         </div>
                         <p class="mt-2 text-sm text-gray-500">HTML template for certificates. Use {{username}}, {{lesson_title}}, {{completion_date}} as placeholders.</p>
                         <div class="mt-3">
@@ -368,3 +368,5 @@ function previewCertificate() {
     previewContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 </script>
+
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

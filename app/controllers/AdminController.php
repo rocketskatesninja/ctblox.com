@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../classes/ActivityLogger.php';
+require_once __DIR__ . '/../models/Stats.php';
+require_once __DIR__ . '/../models/Settings.php';
 
 class AdminController extends Controller {
     public function __construct() {
@@ -25,33 +27,23 @@ class AdminController extends Controller {
     }
     
     public function dashboard() {
-        // Basic stats
-        $stats = [
-            'total_users' => $this->pdo->query("SELECT COUNT(*) FROM users")->fetchColumn(),
-            'active_users' => count($this->user->getActiveUsers()),
-            'total_lessons' => $this->pdo->query("SELECT COUNT(*) FROM lessons")->fetchColumn(),
-            'completed_lessons' => $this->pdo->query("SELECT COUNT(*) FROM progress WHERE completed = 1")->fetchColumn()
-        ];
+        // Get statistics from the Stats model
+        $statsModel = Stats::getInstance();
         
-        // Additional statistics
-        $stats['admin_users'] = $this->pdo->query("SELECT COUNT(*) FROM users WHERE is_admin = 1")->fetchColumn();
-        $stats['coach_users'] = $this->pdo->query("SELECT COUNT(*) FROM users WHERE is_coach = 1")->fetchColumn();
-        $stats['student_users'] = $stats['total_users'] - $stats['admin_users'] - $stats['coach_users'];
+        // Get user statistics
+        $userStats = $statsModel->getUserStats();
         
-        // Get completion rate
-        if ($stats['total_users'] > 0) {
-            $completionData = $this->pdo->query("
-                SELECT 
-                    COUNT(DISTINCT user_id) as users_with_completions
-                FROM progress 
-                WHERE completed = 1
-            ")->fetch();
-            $stats['users_with_completions'] = $completionData['users_with_completions'];
-            $stats['completion_rate'] = round(($stats['users_with_completions'] / $stats['total_users']) * 100);
-        } else {
-            $stats['users_with_completions'] = 0;
-            $stats['completion_rate'] = 0;
-        }
+        // Get lesson statistics
+        $lessonStats = $statsModel->getLessonStats();
+        
+        // Get quiz statistics
+        $quizStats = $statsModel->getQuizStats();
+        
+        // Get activity statistics
+        $activityStats = $statsModel->getActivityStats(30); // Last 30 days
+        
+        // Combine all statistics
+        $stats = array_merge($userStats, $lessonStats, $quizStats, $activityStats);
         
         // Get recent activity counts
         $stats['logins_today'] = $this->pdo->query("
@@ -66,12 +58,10 @@ class AdminController extends Controller {
             WHERE table_schema = DATABASE()
         ")->fetchColumn();
         
-        // Get last system update time (based on settings table)
-        $lastUpdateData = $this->pdo->query("
-            SELECT MAX(updated_at) as last_update
-            FROM settings
-        ")->fetch();
-        $stats['last_update'] = $lastUpdateData['last_update'];
+        // Get last system update time from settings
+        $settingsModel = Settings::getInstance();
+        $lastUpdate = $settingsModel->get('last_system_update');
+        $stats['last_update'] = $lastUpdate ? date('Y-m-d H:i:s', strtotime($lastUpdate)) : 'Never';
         
         // Get completed lessons
         $completedLessons = $this->pdo->query("
@@ -284,6 +274,57 @@ class AdminController extends Controller {
             } else {
                 $this->flash('Error updating user: ' . $e->getMessage(), 'error');
             }
+        }
+    }
+    
+    /**
+     * Send welcome email to newly created user
+     * 
+     * @param string $username Username
+     * @param string $email Email address
+     * @param string $password Password
+     * @return bool Success
+     */
+    private function sendWelcomeEmail($username, $email, $password) {
+        try {
+            // Get email settings
+            $settingsModel = Settings::getInstance();
+            $smtpHost = $settingsModel->get('smtp_host');
+            $smtpPort = $settingsModel->get('smtp_port', '587');
+            $smtpEncryption = $settingsModel->get('smtp_encryption', 'tls');
+            $smtpAuthEnabled = $settingsModel->get('smtp_auth_enabled', '1');
+            $smtpVerifySsl = $settingsModel->get('smtp_verify_ssl', '1');
+            $smtpFromEmail = $settingsModel->get('smtp_from_email', 'noreply@ctblox.com');
+            $smtpFromName = $settingsModel->get('smtp_from_name', 'CT Blox System');
+            $smtpUsername = $settingsModel->get('smtp_username', '');
+            $smtpPassword = $settingsModel->get('smtp_password', '');
+            
+            // If SMTP is not configured, log a message and return
+            if (empty($smtpHost)) {
+                error_log("Cannot send welcome email: SMTP not configured");
+                return false;
+            }
+            
+            // Prepare email content
+            $subject = "Welcome to CTBlox";
+            $message = "<html><body>";
+            $message .= "<h2>Welcome to CTBlox!</h2>";
+            $message .= "<p>Your account has been created with the following details:</p>";
+            $message .= "<p><strong>Username:</strong> " . htmlspecialchars($username) . "</p>";
+            $message .= "<p><strong>Password:</strong> " . htmlspecialchars($password) . "</p>";
+            $message .= "<p>Please log in and change your password as soon as possible.</p>";
+            $message .= "<p>Thank you,<br>The CTBlox Team</p>";
+            $message .= "</body></html>";
+            
+            // For now, just log that we would send an email
+            // In a real implementation, we would use PHPMailer or similar
+            error_log("Would send welcome email to $email with subject: $subject");
+            
+            // Return success (we're not actually sending an email in this implementation)
+            return true;
+        } catch (Exception $e) {
+            error_log("Error sending welcome email: " . $e->getMessage());
+            return false;
         }
     }
     

@@ -47,80 +47,15 @@ require_once __DIR__ . '/config.php';
         })();
     </script>
     
-    <!-- Critical theme styles - must be as early as possible -->
-    <style>
-        /* Hide page until theme is applied */
-        html.visibility-hidden { visibility: hidden; }
-        
-        /* Dark mode critical styles */
-        html.dark { color-scheme: dark; }
-        html.dark body { background-color: #1a202c !important; color: #e2e8f0 !important; }
-        html.dark .bg-white, 
-        html.dark .card, 
-        html.dark nav, 
-        html.dark header, 
-        html.dark footer,
-        html.dark .bg-gray-50,
-        html.dark .bg-gray-100 { background-color: #2d3748 !important; }
-        html.dark .text-gray-900, 
-        html.dark .text-gray-800, 
-        html.dark .text-gray-700,
-        html.dark h1, html.dark h2, html.dark h3, 
-        html.dark h4, html.dark h5, html.dark h6 { color: #e2e8f0 !important; }
-        html.dark .border, 
-        html.dark .border-gray-200, 
-        html.dark .border-gray-300 { border-color: #4a5568 !important; }
-        
-        /* Light mode critical styles */
-        html.light { color-scheme: light; }
-        html.light body { background-color: #f9fafb !important; color: #1a202c !important; }
-        html.light .bg-gray-800, 
-        html.light .bg-gray-900, 
-        html.light .bg-slate-800, 
-        html.light .bg-slate-900 { background-color: #ffffff !important; }
-        
-        /* Fix hover states in light mode */
-        html.light .hover\:bg-gray-50:hover,
-        html.light .hover\:bg-gray-100:hover,
-        html.light .hover\:bg-gray-200:hover { background-color: #f3f4f6 !important; }
-        html.light .dark\:hover\:bg-gray-700:hover { background-color: #f3f4f6 !important; }
-        
-        /* Fix blue buttons and highlighting in light mode */
-        html.light .bg-blue-600,
-        html.light .bg-indigo-600,
-        html.light .bg-indigo-700 { background-color: #4f46e5 !important; color: white !important; }
-        
-        html.light .hover\:bg-blue-700:hover,
-        html.light .hover\:bg-indigo-700:hover { background-color: #4338ca !important; }
-        
-        html.light .bg-blue-100,
-        html.light .bg-indigo-100 { background-color: #e0e7ff !important; }
-        
-        html.light .text-blue-600,
-        html.light .text-indigo-600,
-        html.light .text-purple-600,
-        html.light .text-purple-700,
-        html.light .text-purple-800 { color: #7e22ce !important; }
-        
-        html.light .border-blue-500,
-        html.light .border-indigo-500 { border-color: #6366f1 !important; }
-        
-        /* Fix highlighted elements */
-        html.light .bg-blue-50,
-        html.light .bg-indigo-50,
-        html.light .bg-purple-50 { background-color: #eef2ff !important; }
-        
-        /* Fix focus states */
-        html.light .focus\:ring-blue-500:focus,
-        html.light .focus\:ring-indigo-500:focus { --tw-ring-color: rgba(99, 102, 241, 0.5) !important; }
-        
-        html.light .focus\:border-blue-500:focus,
-        html.light .focus\:border-indigo-500:focus { border-color: #6366f1 !important; }
-    </style>
+    <!-- Critical theme styles - loaded early for theme switching -->
+    <link rel="stylesheet" href="/assets/css/components/theme.css">
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($title) ? $title . ' - ' . APP_NAME : APP_NAME ?></title>
+    
+    <!-- Main CSS with structured components -->
+    <link rel="stylesheet" href="/assets/css/main.css">
     
     <!-- Theme switcher script - inline to avoid 404 errors -->
     <script>

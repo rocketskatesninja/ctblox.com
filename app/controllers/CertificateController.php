@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../models/Settings.php';
+
 class CertificateController extends Controller {
     public function __construct() {
         parent::__construct();
@@ -18,7 +20,7 @@ class CertificateController extends Controller {
         $user = $stmt->fetch();
         
         // Get site settings for certificate template
-        $settings = $this->getSettings();
+        $settings = Settings::getInstance()->getAll();
         
         // Render the certificates page
         echo $this->view('certificates/index', [
@@ -169,19 +171,7 @@ class CertificateController extends Controller {
         ];
     }
     
-    /**
-     * Get application settings from database
-     * 
-     * @return array Array of settings
-     */
-    private function getSettings() {
-        $settings = [];
-        $stmt = $this->pdo->query("SELECT setting_key, setting_value FROM settings");
-        while ($row = $stmt->fetch()) {
-            $settings[$row['setting_key']] = $row['setting_value'];
-        }
-        return $settings;
-    }
+
     
     /**
      * Sanitize a filename

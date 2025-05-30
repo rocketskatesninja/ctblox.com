@@ -9,7 +9,10 @@ $title = 'Admin Dashboard';
         <!-- System Overview -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
                     System Overview
                 </h3>
                 <span class="text-xs text-gray-500">Last updated: <?= date('M j, Y', strtotime($stats['last_update'])) ?></span>
@@ -106,7 +109,10 @@ $title = 'Admin Dashboard';
         <!-- Recent Activity -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg h-full flex flex-col">
             <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    </svg>
                     Recent Activity
                 </h3>
                 <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full"><?= count($recentActivity) ?> activities</span>

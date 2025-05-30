@@ -1,0 +1,135 @@
+/* Form Styles for CT Blox Training Platform */
+
+/* Form variables */
+:root {
+    --input-height: 2.5rem;
+    --input-padding: 0.5rem;
+    --input-border-color: #9ca3af;
+    --input-border-width: 1px;
+    --input-font-size: 1rem;
+    --input-focus-color: #6366f1;
+    --input-focus-shadow: rgba(99, 102, 241, 0.2);
+}
+
+/* Base form element styles */
+.form-input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+select,
+textarea {
+    font-size: var(--input-font-size);
+    height: var(--input-height);
+    padding-top: var(--input-padding);
+    padding-bottom: var(--input-padding);
+    padding-left: var(--input-padding);
+    padding-right: var(--input-padding);
+    border-color: var(--input-border-color);
+    border-width: var(--input-border-width);
+    border-radius: 0.25rem;
+    width: 100%;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Focus state styling */
+.form-input:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--input-focus-color);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--input-focus-shadow);
+}
+
+/* Ensure textareas can be taller */
+textarea {
+    height: auto;
+    min-height: 6rem;
+}
+
+/* Style for dropdowns to ensure consistent appearance */
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Form labels */
+.form-label,
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Form groups */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* Checkboxes and radio buttons */
+.form-checkbox,
+.form-radio {
+    display: inline-flex;
+    align-items: center;
+}
+
+.form-checkbox input[type="checkbox"],
+.form-radio input[type="radio"] {
+    height: 1rem;
+    width: 1rem;
+    margin-right: 0.5rem;
+}
+
+/* Form validation */
+.form-input.is-invalid,
+input.is-invalid,
+select.is-invalid,
+textarea.is-invalid {
+    border-color: #e53e3e;
+}
+
+.form-input.is-invalid:focus,
+input.is-invalid:focus,
+select.is-invalid:focus,
+textarea.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2);
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #e53e3e;
+}
+
+/* Dark mode adjustments */
+.dark .form-input,
+.dark input,
+.dark select,
+.dark textarea {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.dark .form-input:focus,
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+    border-color: var(--highlight-color);
+}

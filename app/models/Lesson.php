@@ -159,9 +159,21 @@ class Lesson {
     public function getAllLessons() {
         try {
             return $this->pdo->query("
-                SELECT l.*, COUNT(DISTINCT p.user_id) as completed_users
+                SELECT l.*, 
+                    COUNT(DISTINCT complete_users.user_id) as completed_users
                 FROM lessons l
-                LEFT JOIN progress p ON l.id = p.lesson_id AND p.completed = 1
+                LEFT JOIN (
+                    SELECT p.lesson_id, p.user_id
+                    FROM progress p
+                    JOIN (
+                        SELECT lesson_id, COUNT(DISTINCT chapter_id) as chapter_count
+                        FROM chapters
+                        GROUP BY lesson_id
+                    ) c ON p.lesson_id = c.lesson_id
+                    WHERE p.completed = 1
+                    GROUP BY p.lesson_id, p.user_id
+                    HAVING COUNT(DISTINCT p.chapter_id) = MAX(c.chapter_count)
+                ) complete_users ON l.id = complete_users.lesson_id
                 GROUP BY l.id
                 ORDER BY l.created_at DESC
             ")->fetchAll();
