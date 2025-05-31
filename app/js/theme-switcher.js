@@ -5,9 +5,11 @@
 
 // Check for saved theme preference or use device preference
 const getPreferredTheme = () => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        return savedTheme;
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode === 'enabled') {
+        return 'dark';
+    } else if (savedDarkMode === 'disabled') {
+        return 'light';
     }
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
@@ -21,7 +23,7 @@ const applyTheme = (theme) => {
         html.classList.add('dark');
         html.classList.remove('light');
         body.classList.add('dark-mode');
-        localStorage.setItem('theme', 'dark');
+        localStorage.setItem('darkMode', 'enabled');
         
         // Update UI elements if they exist
         const darkModeToggle = document.getElementById('dark-mode-toggle');
@@ -35,7 +37,7 @@ const applyTheme = (theme) => {
         html.classList.remove('dark');
         html.classList.add('light');
         body.classList.remove('dark-mode');
-        localStorage.setItem('theme', 'light');
+        localStorage.setItem('darkMode', 'disabled');
         
         // Update UI elements if they exist
         const darkModeToggle = document.getElementById('dark-mode-toggle');
@@ -81,7 +83,7 @@ const initTheme = () => {
         
         // Listen for OS theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-            if (localStorage.getItem('theme') === null) {
+            if (localStorage.getItem('darkMode') === null) {
                 applyTheme(e.matches ? 'dark' : 'light');
             }
         });

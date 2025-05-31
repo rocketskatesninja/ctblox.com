@@ -1,10 +1,14 @@
 <?php
 
+require_once __DIR__ . '/../repositories/DatabaseRepository.php';
+
 class UserController extends Controller {
     private $user;
+    protected $dbRepo;
 
     public function __construct() {
         parent::__construct();
+        $this->dbRepo = new DatabaseRepository();
         $this->user = new User();
     }
 
@@ -50,11 +54,25 @@ class UserController extends Controller {
 
     public function showProfile() {
         $this->requireLogin();
-        $user = $this->user->getById($_SESSION['user_id']);
-        $this->view('user/profile', [
-            'title' => 'Profile',
-            'user' => $user
-        ]);
+        
+        try {
+            // Use the database repository to get user data
+            $user = $this->dbRepo->getUserById($_SESSION['user_id']);
+            
+            // Get user progress statistics
+            $progress = $this->dbRepo->getUserOverallProgress($_SESSION['user_id']);
+            
+            $this->view('user/profile', [
+                'title' => 'Profile',
+                'user' => $user,
+                'progress' => $progress
+            ]);
+        } catch (Exception $e) {
+            // Log the error using our centralized error handler
+            ErrorHandler::logError('User Profile Error', $e->getMessage(), $e->getFile(), $e->getLine());
+            $this->flash('An error occurred while loading your profile', 'error');
+            $this->redirect('/dashboard');
+        }
     }
 
     public function updateProfile() {

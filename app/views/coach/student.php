@@ -176,41 +176,57 @@ $title = 'Student Progress';
             </button>
         </div>
         
-        <?php if (empty($progress)): ?>
-            <div class="px-4 py-12 text-center border-t border-gray-200">
+        <?php if (empty($assignedLessons)): ?>
+            <div class="text-center py-12">
                 <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">No progress yet</h3>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No lessons assigned</h3>
                 <p class="mt-1 text-sm text-gray-500">
-                    This student hasn't started any lessons yet.
+                    This student doesn't have any lessons assigned yet.
                 </p>
             </div>
         <?php else: ?>
             <div class="border-t border-gray-200">
                 <?php
-                // Group progress by lesson
-                $lessonProgress = [];
-                $lessonIds = [];
+                // Create a map of lesson progress data
+                $progressMap = [];
                 foreach ($progress as $item) {
-                    if (!isset($lessonProgress[$item['title']])) {
-                        $lessonProgress[$item['title']] = [
-                            'lesson_id' => $item['lesson_id'],
+                    if (!isset($progressMap[$item['lesson_id']])) {
+                        $progressMap[$item['lesson_id']] = [
+                            'title' => $item['title'],
                             'chapters' => [],
                             'quiz_scores' => []
                         ];
-                        $lessonIds[$item['title']] = $item['lesson_id'];
                     }
                     
-                    $lessonProgress[$item['title']]['chapters'][] = [
+                    $progressMap[$item['lesson_id']]['chapters'][] = [
                         'chapter_id' => $item['chapter_id'],
                         'completed' => $item['completed'],
                         'completed_at' => $item['completed_at']
                     ];
                     
                     if (!empty($item['quiz_score'])) {
-                        $lessonProgress[$item['title']]['quiz_scores'][] = $item['quiz_score'];
+                        $progressMap[$item['lesson_id']]['quiz_scores'][] = $item['quiz_score'];
                     }
+                }
+                
+                // We no longer need to fetch chapters here as they're already provided by the controller
+                
+                // Create lesson progress array from assigned lessons
+                $lessonProgress = [];
+                foreach ($assignedLessons as $lesson) {
+                    $lessonId = $lesson['id'];
+                    $lessonTitle = $lesson['title'];
+                    
+                    // Get existing progress data - the controller now provides complete chapter data
+                    $existingChapters = isset($progressMap[$lessonId]) ? $progressMap[$lessonId]['chapters'] : [];
+                    
+                    $lessonProgress[$lessonTitle] = [
+                        'lesson_id' => $lessonId,
+                        'chapters' => $existingChapters,
+                        'quiz_scores' => isset($progressMap[$lessonId]) ? $progressMap[$lessonId]['quiz_scores'] : []
+                    ];
                 }
                 ?>
                 
@@ -302,7 +318,7 @@ $title = 'Student Progress';
                                         <?php endif; ?>
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-<?= $statusColor ?>-100 text-<?= $statusColor ?>-800">
                                             <svg class="mr-1 h-3 w-3 text-<?= $statusColor ?>-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <?php if ($completionPercentage == 100): ?>
+                                                <?php if ($completionPercentage == 100 && count($completedChapters) > 0 && count($completedChapters) == count($data['chapters'])): ?>
                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                                 <?php elseif ($completionPercentage > 0): ?>
                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />

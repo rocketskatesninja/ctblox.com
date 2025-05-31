@@ -1,10 +1,14 @@
 <?php
 require_once __DIR__ . '/../models/Stats.php';
+require_once __DIR__ . '/../repositories/DatabaseRepository.php';
 
 class DashboardController extends Controller {
+    protected $dbRepo;
+    
     public function __construct() {
         parent::__construct();
         $this->requireLogin();
+        $this->dbRepo = new DatabaseRepository();
     }
     
     public function index() {
@@ -15,31 +19,14 @@ class DashboardController extends Controller {
             return $this->redirect('/coach/dashboard');
         }
         
-        // For students, show lessons and progress
-        $progress = $this->lesson->getUserProgress($_SESSION['user_id']);
+        // For students, show lessons and progress using the database repository
+        $progress = $this->dbRepo->getUserProgress($_SESSION['user_id']);
         
-        // Get available lessons (only those assigned to the student)
-        // This query ensures we only count chapters from currently assigned lessons
-        $stmt = $this->pdo->prepare("
-            SELECT l.*, 
-                   COUNT(DISTINCT c.chapter_id) as total_chapters,
-                   COUNT(DISTINCT CASE WHEN p.completed = 1 THEN p.chapter_id END) as completed_chapters,
-                   la.assigned_at,
-                   (SELECT GROUP_CONCAT(DISTINCT c2.title SEPARATOR ', ') 
-                    FROM chapters c2 
-                    WHERE c2.lesson_id = l.id 
-                    LIMIT 3) as chapter_titles,
-                   (SELECT COUNT(*) FROM quiz_results qr WHERE qr.lesson_id = l.id AND qr.user_id = ?) as quizzes_taken
-            FROM lessons l
-            JOIN lesson_assignments la ON l.id = la.lesson_id AND la.user_id = ?
-            LEFT JOIN chapters c ON l.id = c.lesson_id
-            LEFT JOIN progress p ON l.id = p.lesson_id AND p.user_id = ? AND p.chapter_id = c.chapter_id
-            WHERE l.active = 1
-            GROUP BY l.id
-            ORDER BY la.assigned_at DESC
-        ");
-        $stmt->execute([$_SESSION['user_id'], $_SESSION['user_id'], $_SESSION['user_id']]);
-        $lessons = $stmt->fetchAll();
+        // Get available lessons (only those assigned to the student) using the database repository
+        $lessons = $this->dbRepo->getUserAvailableLessons($_SESSION['user_id']);
+        
+        // Get quiz results for the user
+        $quizResults = $this->dbRepo->getUserQuizResults($_SESSION['user_id']);
         
         // Generate descriptive summaries for each lesson
         foreach ($lessons as &$lesson) {

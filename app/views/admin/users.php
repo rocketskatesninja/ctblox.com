@@ -30,7 +30,7 @@ $title = 'Manage Users';
                     <div class="sm:col-span-6 md:col-span-2">
                         <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
                         <div class="mt-1">
-                            <input type="text" name="username" id="username" required 
+                            <input type="text" name="username" id="username" required autocomplete="username"
                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 px-3">
                         </div>
                         <p class="mt-1 text-xs text-gray-500">Username must be unique</p>
@@ -39,7 +39,7 @@ $title = 'Manage Users';
                     <div class="sm:col-span-6 md:col-span-2">
                         <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
                         <div class="mt-1">
-                            <input type="email" name="email" id="email" required
+                            <input type="email" name="email" id="email" required autocomplete="email"
                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 px-3">
                         </div>
                         <p class="mt-1 text-xs text-gray-500">Used for account recovery</p>
@@ -48,7 +48,7 @@ $title = 'Manage Users';
                     <div class="sm:col-span-6 md:col-span-2">
                         <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
                         <div class="mt-1 relative">
-                            <input type="password" name="password" id="password" required
+                            <input type="password" name="password" id="password" required autocomplete="new-password"
                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 px-3 pr-10">
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                                 <button type="button" id="togglePassword" class="text-gray-500 hover:text-gray-700 focus:outline-none">
@@ -154,7 +154,7 @@ $title = 'Manage Users';
                                 <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <input type="text" id="user-search" placeholder="Search users..." 
+                        <input type="text" id="user-search" placeholder="Search users..." autocomplete="off"
                                class="pl-10 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md h-10 py-2"
                                style="padding-left: 40px;">
                     </div>
@@ -318,15 +318,15 @@ $title = 'Manage Users';
                         <div class="w-full mb-4">
                             <label for="edit-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                             <div class="mt-1">
-                                <input type="email" name="email" id="edit-email" required
+                                <input type="email" name="email" id="edit-email" required autocomplete="email"
                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md h-10 px-3">
                             </div>
                         </div>
 
                         <div class="w-full">
-                            <label for="edit-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
+                            <label for="edit-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password (leave blank to keep current)</label>
                             <div class="mt-1 relative">
-                                <input type="password" name="password" id="edit-password"
+                                <input type="password" name="password" id="edit-password" autocomplete="new-password"
                                        placeholder="Leave blank to keep existing password"
                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md h-10 px-3 pr-12">
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-2">

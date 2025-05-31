@@ -1,0 +1,8 @@
+# CTBlox Application Maintenance Cron Jobs
+# Copy these entries to your system crontab
+
+# Run database cleanup daily at 3:00 AM
+0 3 * * * php /var/www/ctblox.com/app/maintenance/cleanup.php >> /var/www/ctblox.com/logs/maintenance.log 2>&1
+
+# Rotate logs daily at 2:00 AM
+0 2 * * * php /var/www/ctblox.com/app/maintenance/rotate_logs.php >> /var/www/ctblox.com/logs/maintenance.log 2>&1

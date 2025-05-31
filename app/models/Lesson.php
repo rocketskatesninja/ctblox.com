@@ -328,6 +328,7 @@ class Lesson {
      */
     public function getAssignedLessons($userId) {
         try {
+            // Use a direct query without any caching to ensure fresh data
             $stmt = $this->pdo->prepare("
                 SELECT l.id, l.title, l.description, la.assigned_at, u.username as assigned_by
                 FROM lessons l
@@ -337,9 +338,20 @@ class Lesson {
                 ORDER BY la.assigned_at DESC
             ");
             $stmt->execute([$userId]);
-            return $stmt->fetchAll();
+            $results = $stmt->fetchAll();
+            
+            // Log the number of lessons found for debugging
+            error_log("Found " . count($results) . " assigned lessons for user ID $userId");
+            
+            return $results;
         } catch (PDOException $e) {
-            error_log("Error getting assigned lessons: " . $e->getMessage());
+            // Use the ErrorHandler if available
+            if (class_exists('ErrorHandler')) {
+                require_once __DIR__ . '/../classes/ErrorHandler.php';
+                ErrorHandler::logDatabaseError($e, "Error getting assigned lessons for user ID $userId");
+            } else {
+                error_log("Error getting assigned lessons: " . $e->getMessage());
+            }
             return [];
         }
     }
@@ -382,15 +394,31 @@ class Lesson {
                 return false;
             }
             
+            // Check if the user exists
+            $userStmt = $this->pdo->prepare("SELECT id FROM users WHERE id = ?");
+            $userStmt->execute([$userId]);
+            if (!$userStmt->fetch()) {
+                return false;
+            }
+            
             // Insert the assignment
             $stmt = $this->pdo->prepare("
                 INSERT INTO lesson_assignments (user_id, lesson_id, assigned_by)
                 VALUES (?, ?, ?)
                 ON DUPLICATE KEY UPDATE assigned_by = ?, assigned_at = NOW()
             ");
-            return $stmt->execute([$userId, $lessonId, $assignedBy, $assignedBy]);
+            $result = $stmt->execute([$userId, $lessonId, $assignedBy, $assignedBy]);
+            
+            if ($result) {
+                // Log successful assignment
+                error_log("Lesson ID $lessonId successfully assigned to User ID $userId by User ID $assignedBy");
+            }
+            
+            return $result;
         } catch (PDOException $e) {
-            error_log("Error assigning lesson: " . $e->getMessage());
+            // Use the ErrorHandler to log database errors
+            require_once __DIR__ . '/../classes/ErrorHandler.php';
+            ErrorHandler::logDatabaseError($e, "Error assigning lesson: User ID $userId, Lesson ID $lessonId, Assigned By $assignedBy");
             return false;
         }
     }
@@ -470,7 +498,10 @@ class Lesson {
         } catch (PDOException $e) {
             // Roll back the transaction if any operation fails
             $this->pdo->rollBack();
-            error_log("Error unassigning lesson: " . $e->getMessage());
+            
+            // Use the ErrorHandler to log database errors
+            require_once __DIR__ . '/../classes/ErrorHandler.php';
+            ErrorHandler::logDatabaseError($e, "Error unassigning lesson: User ID $userId, Lesson ID $lessonId");
             return false;
         }
     }

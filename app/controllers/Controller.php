@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../classes/ErrorHandler.php';
+
 abstract class Controller {
     protected $pdo;
     protected $user;

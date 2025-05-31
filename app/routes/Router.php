@@ -7,20 +7,20 @@ class Router {
         global $pdo;
         $this->pdo = $pdo;
         
-        // Start or resume the session
+        // Set session cookie parameters for better security
         if (session_status() === PHP_SESSION_NONE) {
+            session_set_cookie_params([
+                'lifetime' => SESSION_LIFETIME,
+                'path' => '/',
+                'domain' => '',
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+            
+            // Start or resume the session
             session_start();
         }
-        
-        // Set session cookie parameters for better security
-        session_set_cookie_params([
-            'lifetime' => SESSION_LIFETIME,
-            'path' => '/',
-            'domain' => '',
-            'secure' => true,
-            'httponly' => true,
-            'samesite' => 'Lax'
-        ]);
         
         // Update session timestamp on every request if user is logged in
         if (isset($_SESSION['user_id'])) {
@@ -86,16 +86,38 @@ class Router {
                 $paramValues = array_values($params);
                 return call_user_func_array([$controller, $action], $paramValues);
             } catch (Exception $e) {
-                error_log($e->getMessage());
-                return $this->error(500);
+                // Use ErrorHandler to log the exception
+                ErrorHandler::logError('Exception', $e->getMessage(), $e->getFile(), $e->getLine());
+                
+                // In development, show the error message
+                $isDevelopment = ($_SERVER['SERVER_NAME'] === 'localhost' || $_SERVER['SERVER_NAME'] === '127.0.0.1');
+                $message = $isDevelopment ? $e->getMessage() : '';
+                
+                return $this->error(500, $message);
             }
         }
         
         return $this->error(404);
     }
     
-    private function error($code) {
+    /**
+     * Handle errors by displaying an appropriate error page
+     * 
+     * @param int $code HTTP error code
+     * @param string $message Optional error message (only shown in development)
+     * @return string The rendered error view
+     */
+    private function error($code, $message = '') {
         $errorController = new ErrorController();
-        return $errorController->show($code);
+        
+        switch ($code) {
+            case 404:
+                return $errorController->notFound();
+            case 403:
+                return $errorController->forbidden();
+            case 500:
+            default:
+                return $errorController->serverError($message);
+        }
     }
 }

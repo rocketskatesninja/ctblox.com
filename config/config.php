@@ -1,16 +1,29 @@
 <?php
-// Database configuration
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'ctblox');
-define('DB_USER', 'ctblox_user');
-define('DB_PASS', 'ctblox_password');
+/**
+ * Main Configuration File
+ * 
+ * This file contains the base configuration for the CTBlox application.
+ * Environment-specific configuration should be placed in the corresponding
+ * environment file (development.php, testing.php, production.php).
+ */
+
+// Base paths
+define('APP_PATH', dirname(__DIR__));
+define('PUBLIC_PATH', APP_PATH . '/public');
+define('LOGS_PATH', APP_PATH . '/logs');
+define('LESSONS_PATH', APP_PATH . '/app/lessons');
 
 // Application configuration
 define('APP_NAME', 'CTBlox Training Platform');
 define('APP_VERSION', '1.0.0');
 define('APP_URL', 'http://test');
-define('APP_PATH', dirname(__DIR__));
-define('PUBLIC_PATH', APP_PATH . '/public');
+define('APP_DEBUG', false); // Override in environment-specific config
+
+// Database configuration
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'ctblox');
+define('DB_USER', 'ctblox_user');
+define('DB_PASS', 'ctblox_password');
 
 // Security configuration
 define('SESSION_LIFETIME', 3600); // 1 hour
@@ -26,15 +39,23 @@ define('SMTP_PASS', '');
 define('SMTP_FROM', 'noreply@corporatetools.com');
 define('SMTP_FROM_NAME', 'CTBlox Training');
 
-// Lesson configuration
-define('LESSONS_PATH', APP_PATH . '/app/lessons');
+// Upload configuration
 define('MAX_UPLOAD_SIZE', 10 * 1024 * 1024); // 10MB
+define('UPLOADS_PATH', PUBLIC_PATH . '/uploads');
+define('ASSETS_URL', '/assets');
+define('UPLOADS_URL', '/uploads');
 
-// Error reporting
-error_reporting(E_ALL);
-ini_set('display_errors', 0);
-ini_set('log_errors', 1);
-ini_set('error_log', APP_PATH . '/logs/error.log');
+// Default error reporting
+define('ERROR_REPORTING_LEVEL', E_ALL);
+define('DISPLAY_ERRORS', false); // Override in environment-specific config
+define('LOG_ERRORS', true);
+define('ERROR_LOG', LOGS_PATH . '/error.log');
+
+// Apply error reporting settings
+error_reporting(ERROR_REPORTING_LEVEL);
+ini_set('display_errors', DISPLAY_ERRORS ? 1 : 0);
+ini_set('log_errors', LOG_ERRORS ? 1 : 0);
+ini_set('error_log', ERROR_LOG);
 
 // Initialize database connection
 try {

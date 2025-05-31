@@ -1,6 +1,15 @@
 <?php
+/**
+ * Application Configuration Bootstrap
+ * 
+ * This file bootstraps the application configuration and includes common helpers.
+ */
+
 // Include the main config
 require_once dirname(dirname(__DIR__)) . '/config/config.php';
+
+// Include the ErrorHandler class
+require_once __DIR__ . '/../classes/ErrorHandler.php';
 
 // Common functions
 function generate_csrf_token() {
@@ -24,14 +33,20 @@ function flash($message, $type = 'info') {
 // Set default timezone
 date_default_timezone_set('America/New_York');
 
-// Enable error reporting in development
+// Configure error display based on environment
 if ($_SERVER['SERVER_NAME'] === 'localhost' || $_SERVER['SERVER_NAME'] === '127.0.0.1') {
+    // Development environment
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
 } else {
+    // Production environment
     error_reporting(0);
     ini_set('display_errors', 0);
 }
+
+// Always log errors
+ini_set('log_errors', 1);
+ini_set('error_log', APP_PATH . '/logs/error.log');
 
 // Initialize database connection if not already done
 if (!isset($pdo)) {

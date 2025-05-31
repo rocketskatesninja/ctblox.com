@@ -7,6 +7,13 @@ class User {
         $this->pdo = $pdo;
     }
     
+    /**
+     * Authenticate a user with username and password
+     * 
+     * @param string $username Username
+     * @param string $password Password
+     * @return array|bool User data if authenticated, false otherwise
+     */
     public function authenticate($username, $password) {
         try {
             $stmt = $this->pdo->prepare("SELECT * FROM users WHERE username = ?");
@@ -35,9 +42,10 @@ class User {
      * Log a user activity
      * 
      * @param string $username The username of the user performing the action
-     * @param string $targetUsername The username of the target user (if applicable)
      * @param string $activityType The type of activity
-     * @param string $description Additional details about the activity
+     * @param string|null $targetUsername The username of the target user (if applicable)
+     * @param string|null $description Additional details about the activity
+     * @param string|null $ipAddress IP address of the user
      * @return bool Whether the activity was logged successfully
      */
     public function logActivity($username, $activityType, $targetUsername = null, $description = null, $ipAddress = null) {
@@ -61,9 +69,9 @@ class User {
     }
     
     /**
-     * Clear all activity logs from the database
+     * Clear the activity log
      * 
-     * @return bool Whether the operation was successful
+     * @return bool Whether the activity log was cleared successfully
      */
     public function clearActivityLog() {
         try {
@@ -82,6 +90,12 @@ class User {
         }
     }
     
+    /**
+     * Update the last login timestamp for a user
+     * 
+     * @param int $userId User ID
+     * @return bool Whether the update was successful
+     */
     private function updateLastLogin($userId) {
         try {
             $stmt = $this->pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
@@ -91,6 +105,12 @@ class User {
         }
     }
     
+    /**
+     * Store the user session
+     * 
+     * @param int $userId User ID
+     * @return bool Whether the session was stored successfully
+     */
     private function storeSession($userId) {
         try {
             $stmt = $this->pdo->prepare("
@@ -103,32 +123,40 @@ class User {
         }
     }
     
-    public function getById($id) {
+    /**
+     * Get a user by ID
+     * 
+     * @param int $id User ID
+     * @return array|bool User data if found, false otherwise
+     */
+    public function getUserById($id) {
         try {
             $stmt = $this->pdo->prepare("SELECT * FROM users WHERE id = ?");
             $stmt->execute([$id]);
             return $stmt->fetch();
-        } catch (PDOException $e) {
-            error_log("Error getting user: " . $e->getMessage());
+        } catch (Exception $e) {
+            error_log("Error getting user by ID: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Get user by ID with additional profile information
+     * Get a user by ID (alias for getUserById for backward compatibility)
      * 
-     * @param int $id The user ID
-     * @return array|false The user data or false on failure
+     * @param int $id User ID
+     * @return array|bool User data if found, false otherwise
+     * @deprecated Use getUserById() instead
      */
-    public function getUserById($id) {
-        return $this->getById($id);
+    public function getById($id) {
+        return $this->getUserById($id);
     }
     
+    
     /**
-     * Update user profile information
+     * Update a user's profile
      * 
-     * @param int $id The user ID
-     * @param array $data The profile data to update
+     * @param int $id User ID
+     * @param array $data Profile data
      * @return bool Whether the update was successful
      */
     public function updateProfile($id, $data) {
@@ -175,8 +203,27 @@ class User {
      * @param int $excludeUserId The user ID to exclude from the check
      * @return bool Whether the email exists
      */
-    public function emailExists($email, $excludeUserId = null) {
-        return $this->isEmailInUse($email, $excludeUserId);
+    /**
+     * Check if an email exists
+     * 
+     * @param string $email Email to check
+     * @param int|null $excludeUserId User ID to exclude from the check
+     * @return bool Whether the email exists
+     */
+    public function hasEmail($email, $excludeUserId = null) {
+        try {
+            if ($excludeUserId) {
+                $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ? AND id != ?");
+                $stmt->execute([$email, $excludeUserId]);
+            } else {
+                $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
+                $stmt->execute([$email]);
+            }
+            return $stmt->fetchColumn() > 0;
+        } catch (Exception $e) {
+            error_log("Error checking email existence: " . $e->getMessage());
+            return false;
+        }
     }
     
     /**
@@ -184,6 +231,25 @@ class User {
      * 
      * @param int $userId The user ID
      * @param string $password The password to verify
+     * @return bool Whether the password is correct
+     */
+    /**
+     * Check if an email exists (alias for hasEmail for backward compatibility)
+     * 
+     * @param string $email Email to check
+     * @param int|null $excludeUserId User ID to exclude from the check
+     * @return bool Whether the email exists
+     * @deprecated Use hasEmail() instead
+     */
+    public function emailExists($email, $excludeUserId = null) {
+        return $this->hasEmail($email, $excludeUserId);
+    }
+    
+    /**
+     * Verify a user's password
+     * 
+     * @param int $userId User ID
+     * @param string $password Password to verify
      * @return bool Whether the password is correct
      */
     public function verifyPassword($userId, $password) {
@@ -210,6 +276,13 @@ class User {
      * @param string $newPassword The new password
      * @return bool Whether the update was successful
      */
+    /**
+     * Update a user's password
+     * 
+     * @param int $userId User ID
+     * @param string $newPassword New password
+     * @return bool Whether the update was successful
+     */
     public function updatePassword($userId, $newPassword) {
         try {
             $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
@@ -228,6 +301,14 @@ class User {
      * @param int|null $excludeUserId Optional user ID to exclude from the check (for updates)
      * @return bool True if the email is already in use, false otherwise
      */
+    /**
+     * Check if an email is in use (alias for hasEmail for backward compatibility)
+     * 
+     * @param string $email Email to check
+     * @param int|null $excludeUserId User ID to exclude from the check
+     * @return bool Whether the email is in use
+     * @deprecated Use hasEmail() instead
+     */
     public function isEmailInUse($email, $excludeUserId = null) {
         try {
             if ($excludeUserId) {
@@ -244,7 +325,18 @@ class User {
         }
     }
     
-    public function create($username, $email, $password, $isAdmin = false, $isCoach = false, $coachId = null) {
+    /**
+     * Create a new user
+     * 
+     * @param string $username Username
+     * @param string $email Email
+     * @param string $password Password
+     * @param bool $isAdmin Whether the user is an admin
+     * @param bool $isCoach Whether the user is a coach
+     * @param int|null $coachId Coach ID if the user is a student
+     * @return int|bool User ID if created, false otherwise
+     */
+    public function createUser($username, $email, $password, $isAdmin = false, $isCoach = false, $coachId = null) {
         try {
             // Check user limit
             $userCount = $this->pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
@@ -291,7 +383,30 @@ class User {
         }
     }
     
-    public function update($id, $data) {
+    /**
+     * Create a new user (alias for createUser for backward compatibility)
+     * 
+     * @param string $username Username
+     * @param string $email Email
+     * @param string $password Password
+     * @param bool $isAdmin Whether the user is an admin
+     * @param bool $isCoach Whether the user is a coach
+     * @param int|null $coachId Coach ID if the user is a student
+     * @return int|bool User ID if created, false otherwise
+     * @deprecated Use createUser() instead
+     */
+    public function create($username, $email, $password, $isAdmin = false, $isCoach = false, $coachId = null) {
+        return $this->createUser($username, $email, $password, $isAdmin, $isCoach, $coachId);
+    }
+    
+    /**
+     * Update a user
+     * 
+     * @param int $id User ID
+     * @param array $data User data
+     * @return bool Whether the update was successful
+     */
+    public function updateUser($id, $data) {
         try {
             // Check for duplicate email if email is being updated
             if (isset($data['email']) && !empty($data['email'])) {
@@ -329,7 +444,25 @@ class User {
         }
     }
     
-    public function delete($id) {
+    /**
+     * Update a user (alias for updateUser for backward compatibility)
+     * 
+     * @param int $id User ID
+     * @param array $data User data
+     * @return bool Whether the update was successful
+     * @deprecated Use updateUser() instead
+     */
+    public function update($id, $data) {
+        return $this->updateUser($id, $data);
+    }
+    
+    /**
+     * Delete a user
+     * 
+     * @param int $id User ID
+     * @return bool Whether the deletion was successful
+     */
+    public function deleteUser($id) {
         try {
             // Delete the user
             $stmt = $this->pdo->prepare("DELETE FROM users WHERE id = ?");
@@ -340,6 +473,22 @@ class User {
         }
     }
     
+    /**
+     * Delete a user (alias for deleteUser for backward compatibility)
+     * 
+     * @param int $id User ID
+     * @return bool Whether the deletion was successful
+     * @deprecated Use deleteUser() instead
+     */
+    public function delete($id) {
+        return $this->deleteUser($id);
+    }
+    
+    /**
+     * Get all users
+     * 
+     * @return array Users
+     */
     public function getAllUsers() {
         try {
             return $this->pdo->query("
@@ -355,6 +504,11 @@ class User {
         }
     }
     
+    /**
+     * Get all coaches
+     * 
+     * @return array Coaches
+     */
     public function getCoaches() {
         try {
             return $this->pdo->query("
@@ -369,6 +523,12 @@ class User {
         }
     }
     
+    /**
+     * Get students for a coach
+     * 
+     * @param int $coachId Coach ID
+     * @return array Students
+     */
     public function getStudents($coachId) {
         try {
             $stmt = $this->pdo->prepare("
@@ -385,6 +545,11 @@ class User {
         }
     }
     
+    /**
+     * Get active users
+     * 
+     * @return array Active users
+     */
     public function getActiveUsers() {
         try {
             return $this->pdo->query("
@@ -404,6 +569,11 @@ class User {
      * Get the client's IP address
      * 
      * @return string The client's IP address
+     */
+    /**
+     * Get the client IP address
+     * 
+     * @return string IP address
      */
     private function getClientIP() {
         // Check for proxy forwarded IP
@@ -428,6 +598,11 @@ class User {
         return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     }
     
+    /**
+     * Clean expired sessions
+     * 
+     * @return bool Whether the cleaning was successful
+     */
     public function cleanExpiredSessions() {
         try {
             $stmt = $this->pdo->prepare("

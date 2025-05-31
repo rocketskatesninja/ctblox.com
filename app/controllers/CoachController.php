@@ -1,12 +1,16 @@
 <?php
+require_once __DIR__ . '/../repositories/DatabaseRepository.php';
+
 class CoachController extends Controller {
     protected $user;
     protected $lesson;
+    protected $dbRepo;
     
     public function __construct() {
         parent::__construct();
         $this->user = new User();
         $this->lesson = new Lesson();
+        $this->dbRepo = new DatabaseRepository();
         
         // Ensure user is logged in and is a coach
         $this->requireLogin();
@@ -19,43 +23,34 @@ class CoachController extends Controller {
     public function dashboard() {
         $coachId = $_SESSION['user_id'];
         
-        // Get students assigned to this coach
-        $students = $this->user->getStudents($coachId);
+        // Get students assigned to this coach using the database repository
+        $students = $this->dbRepo->getCoachStudents($coachId);
         
         // Get progress data for each student
         $studentsWithProgress = [];
         foreach ($students as $student) {
-            $progress = $this->lesson->getUserProgress($student['id'], null); // Pass null to get all progress entries
+            // Get progress data using the database repository
+            $progress = $this->dbRepo->getUserProgress($student['id']);
             
-            // Group progress by lesson
+            // Get lesson completion statistics
+            $lessonStats = $this->dbRepo->getUserLessonCompletionStats($student['id']);
+            
+            // Convert to the format expected by the view
             $lessonProgress = [];
-            foreach ($progress as $item) {
-                if (!isset($lessonProgress[$item['title']])) {
-                    $lessonProgress[$item['title']] = [
-                        'completed_chapters' => 0,
-                        'total_chapters' => 0,
-                        'last_activity' => null,
-                        'quiz_scores' => []
-                    ];
-                }
-                
-                $lessonProgress[$item['title']]['total_chapters']++;
-                
-                if ($item['completed']) {
-                    $lessonProgress[$item['title']]['completed_chapters']++;
-                    
-                    // Track the most recent activity
-                    if (
-                        !$lessonProgress[$item['title']]['last_activity'] || 
-                        strtotime($item['completed_at']) > strtotime($lessonProgress[$item['title']]['last_activity'])
-                    ) {
-                        $lessonProgress[$item['title']]['last_activity'] = $item['completed_at'];
-                    }
-                }
-                
-                // Add quiz score if available
-                if (!empty($item['quiz_score'])) {
-                    $lessonProgress[$item['title']]['quiz_scores'][] = $item['quiz_score'];
+            foreach ($lessonStats as $lesson) {
+                $lessonProgress[$lesson['title']] = [
+                    'completed_chapters' => $lesson['completed_chapters'],
+                    'total_chapters' => $lesson['total_chapters'],
+                    'last_activity' => $lesson['last_activity'],
+                    'quiz_scores' => []
+                ];
+            }
+            
+            // Add quiz scores
+            $quizResults = $this->dbRepo->getUserQuizResults($student['id']);
+            foreach ($quizResults as $quiz) {
+                if (isset($lessonProgress[$quiz['lesson_title']])) {
+                    $lessonProgress[$quiz['lesson_title']]['quiz_scores'][] = $quiz['score'];
                 }
             }
             
@@ -128,17 +123,65 @@ class CoachController extends Controller {
         // Get student details
         $student = $this->user->getById($studentId);
         
-        // Get assigned lessons
+        // Get assigned lessons - force a fresh query to avoid stale data
         $assignedLessons = $this->lesson->getAssignedLessons($studentId);
+        
+        // Log the assigned lessons for debugging
+        error_log("Student $studentId has " . count($assignedLessons) . " assigned lessons");
         
         // Get all available lessons (for the assign modal)
         $allLessons = $this->lesson->getAllLessons();
         
-        // Get detailed progress for assigned lessons only
-        $progress = $this->lesson->getUserProgressForAssignedLessons($studentId);
+        // Get detailed progress for assigned lessons using the database repository
+        $progress = $this->dbRepo->getUserProgress($studentId);
         
-        // Get overall progress statistics
-        $overallProgress = $this->lesson->getOverallProgress($studentId);
+        // Filter to only include assigned lessons
+        $assignedLessonIds = array_column($assignedLessons, 'id');
+        $progress = array_filter($progress, function($item) use ($assignedLessonIds) {
+            return in_array($item['lesson_id'], $assignedLessonIds);
+        });
+        
+        // Get all chapters for each assigned lesson to ensure accurate progress calculation
+        foreach ($assignedLessonIds as $lessonId) {
+            // Use repository pattern for consistency
+            $chapters = $this->dbRepo->getLessonChapters($lessonId);
+            
+            // Check if we have progress records for each chapter
+            foreach ($chapters as $chapter) {
+                $hasProgressRecord = false;
+                foreach ($progress as $progressItem) {
+                    if ($progressItem['lesson_id'] == $lessonId && $progressItem['chapter_id'] == $chapter['chapter_id']) {
+                        $hasProgressRecord = true;
+                        break;
+                    }
+                }
+                
+                // If no progress record exists for this chapter, create a default one
+                if (!$hasProgressRecord) {
+                    // Get the lesson title
+                    $lessonTitle = '';
+                    foreach ($assignedLessons as $lesson) {
+                        if ($lesson['id'] == $lessonId) {
+                            $lessonTitle = $lesson['title'];
+                            break;
+                        }
+                    }
+                    
+                    // Add a default progress record
+                    $progress[] = [
+                        'lesson_id' => $lessonId,
+                        'title' => $lessonTitle,
+                        'chapter_id' => $chapter['chapter_id'],
+                        'completed' => 0,
+                        'completed_at' => null,
+                        'quiz_score' => null
+                    ];
+                }
+            }
+        }
+        
+        // Get overall progress statistics using the database repository
+        $overallProgress = $this->dbRepo->getUserOverallProgress($studentId);
         
         // Get completed lessons (eligible for certificates)
         $completedLessons = $this->lesson->getCompletedLessons($studentId);
@@ -197,13 +240,17 @@ class CoachController extends Controller {
         
         // Assign the lesson
         if ($this->lesson->assignLesson($studentId, $lessonId, $userId)) {
+            // Clear any cached data to ensure fresh data is loaded
+            if (function_exists('opcache_reset')) {
+                opcache_reset();
+            }
             $this->flash('Lesson assigned successfully', 'success');
         } else {
             $this->flash('Failed to assign lesson', 'error');
         }
         
-        // Redirect back to student page
-        $this->redirect('/coach/student/' . $studentId);
+        // Redirect back to student page with a cache-busting parameter
+        $this->redirect('/coach/student/' . $studentId . '?t=' . time());
     }
     
     /**

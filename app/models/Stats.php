@@ -255,9 +255,9 @@ class Stats {
             
             // Get last activity date
             $stmt = $this->pdo->prepare("
-                SELECT MAX(created_at) as last_activity
+                SELECT MAX(activity_date) as last_activity
                 FROM activity_log
-                WHERE user_id = ?
+                WHERE username = (SELECT username FROM users WHERE id = ?)
             ");
             $stmt->execute([$userId]);
             $stats['last_activity_date'] = $stmt->fetchColumn();
@@ -284,7 +284,7 @@ class Stats {
                     COUNT(DISTINCT username) as unique_users
                 FROM activity_log
                 WHERE activity_type = 'login'
-                AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                AND activity_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             ");
             $stmt->execute([$days]);
             $loginData = $stmt->fetch();
@@ -306,7 +306,7 @@ class Stats {
             $stmt = $this->pdo->prepare("
                 SELECT COUNT(*) as total_quizzes
                 FROM quiz_results
-                WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                WHERE completed_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
             ");
             $stmt->execute([$days]);
             $stats['total_quizzes'] = $stmt->fetchColumn();

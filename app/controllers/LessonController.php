@@ -1,8 +1,13 @@
 <?php
+require_once __DIR__ . '/../repositories/DatabaseRepository.php';
+
 class LessonController extends Controller {
+    protected $dbRepo;
+    
     public function __construct() {
         parent::__construct();
         $this->requireStudent();
+        $this->dbRepo = new DatabaseRepository();
     }
     
     public function viewLesson($id) {
@@ -12,14 +17,8 @@ class LessonController extends Controller {
             $this->redirect('/dashboard');
         }
         
-        // Get user's progress for this lesson
-        $progress = $this->pdo->prepare("
-            SELECT chapter_id, completed
-            FROM progress
-            WHERE user_id = ? AND lesson_id = ? AND completed = 1
-        ");
-        $progress->execute([$_SESSION['user_id'], $id]);
-        $progressData = $progress->fetchAll(PDO::FETCH_ASSOC);
+        // Get user's progress for this lesson using the database repository
+        $progressData = $this->dbRepo->getUserProgress($_SESSION['user_id'], $id);
         
         // Convert to key-value format for easier access in the view
         $progress = [];
@@ -27,14 +26,8 @@ class LessonController extends Controller {
             $progress[$item['chapter_id']] = $item['completed'];
         }
         
-        // Get quiz results
-        $quizResults = $this->pdo->prepare("
-            SELECT chapter_id, score
-            FROM quiz_results
-            WHERE user_id = ? AND lesson_id = ?
-        ");
-        $quizResults->execute([$_SESSION['user_id'], $id]);
-        $quizResultsData = $quizResults->fetchAll(PDO::FETCH_ASSOC);
+        // Get quiz results using the database repository
+        $quizResultsData = $this->dbRepo->getUserQuizResults($_SESSION['user_id'], $id);
         
         // Convert to key-value format for easier access in the view
         $quizResults = [];
